@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#536b52">
+  <meta name="description" content="Gestão de estoque, vendas, faturamento e lucro da AHAVA Semijoias.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>AHAVA • Gestão</title>
+  <style>
+    :root{--green:#536b52;--green2:#71866c;--brown:#80664f;--ink:#2e342d;--muted:#778074;--bg:#f5f6f1;--card:#fff;--line:#e4e8df;--red:#b34d43;--gold:#b38a4c}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    header{background:var(--green);color:white;padding:22px 18px 18px;position:sticky;top:0;z-index:5;box-shadow:0 2px 12px #24332222}
+    .head{max-width:1100px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .brand{font-family:Georgia,serif;font-size:25px;letter-spacing:2px}.sub{font-size:12px;opacity:.85}
+    main{max-width:1100px;margin:20px auto;padding:0 14px 90px}
+    nav{display:flex;gap:8px;overflow:auto;margin:0 0 18px;padding-bottom:4px}
+    nav button{white-space:nowrap;border:1px solid var(--line);background:white;color:var(--green);padding:10px 14px;border-radius:24px;font-weight:650}
+    nav button.active{background:var(--green);color:white;border-color:var(--green)}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 3px 14px #25351c08}
+    .kpi small{color:var(--muted);display:block;font-weight:600}.kpi strong{font-size:clamp(19px,3vw,27px);display:block;margin-top:7px;color:var(--green)}
+    h2{font-size:20px;margin:0 0 14px;color:var(--green)} h3{font-size:16px;margin:0 0 12px}
+    .section{display:none}.section.active{display:block}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}
+    button,.btn{cursor:pointer;border:0;border-radius:10px;padding:11px 14px;font-weight:650;background:var(--green);color:white}
+    button.secondary{background:#edf1e9;color:var(--green)}button.danger{background:#f8e9e6;color:var(--red)}
+    input,select{width:100%;border:1px solid #d9dfd5;border-radius:10px;padding:11px;background:#fff;color:var(--ink);font:inherit}
+    label{font-size:12px;color:var(--muted);font-weight:700;display:block;margin:0 0 5px}
+    .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .field.full{grid-column:1/-1}
+    .tablewrap{overflow:auto;margin-top:12px}table{border-collapse:collapse;width:100%;min-width:600px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+    .pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#edf1e9;color:var(--green);font-size:11px;font-weight:700}.low{background:#fae9e6;color:var(--red)}
+    .muted{color:var(--muted);font-size:13px}.empty{text-align:center;padding:30px;color:var(--muted)}
+    .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.barrow{display:grid;grid-template-columns:45px 1fr 90px;gap:8px;align-items:center;margin:9px 0;font-size:12px}.bar{height:10px;background:#edf1e9;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--green2);border-radius:8px}
+    .notice{background:#f3eee8;border:1px solid #e8ddcf;color:#66513d;padding:12px;border-radius:12px;font-size:13px;margin-top:14px}
+    .actions{display:flex;gap:6px}.actions button{padding:7px 9px;font-size:12px}
+    .modal{position:fixed;inset:0;background:#18201588;display:none;align-items:flex-end;justify-content:center;z-index:10;padding:12px}.modal.open{display:flex}.modalbox{background:white;border-radius:18px 18px 12px 12px;padding:20px;width:min(560px,100%);max-height:90vh;overflow:auto}
+    .modalbox h2{margin-bottom:18px}.close{float:right;background:#edf1e9;color:var(--green);padding:6px 10px}
+    footer{font-size:11px;color:var(--muted);text-align:center;margin:22px 0}
+    @media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.charts{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.head{align-items:flex-start}.brand{font-size:22px}}
+  </style>
+</head>
+<body>
+<header><div class="head"><div><div class="brand">AHAVA</div><div class="sub">SEMIJOIAS · PAINEL DE GESTÃO</div></div><div class="sub" id="today"></div></div></header>
+<main>
+  <nav>
+    <button class="active" data-tab="dashboard">Visão geral</button>
+    <button data-tab="estoque">Estoque</button>
+    <button data-tab="vendas">Vendas</button>
+    <button data-tab="financeiro">Financeiro</button>
+    <button data-tab="dados">Backup e ajustes</button>
+  </nav>
+
+  <section id="dashboard" class="section active">
+    <div class="row between"><h2>Visão geral</h2><span class="pill" id="periodLabel"></span></div>
+    <div class="grid">
+      <div class="card kpi"><small>Faturamento do mês</small><strong id="kRevenue">R$ 0,00</strong></div>
+      <div class="card kpi"><small>Lucro estimado do mês</small><strong id="kProfit">R$ 0,00</strong></div>
+      <div class="card kpi"><small>Peças em estoque</small><strong id="kStock">0</strong></div>
+      <div class="card kpi"><small>Valor investido no estoque</small><strong id="kInvest">R$ 0,00</strong></div>
+    </div>
+    <div class="charts">
+      <div class="card"><h3>Faturamento dos últimos 6 meses</h3><div id="revenueChart"></div></div>
+      <div class="card"><h3>Estoque baixo</h3><div id="lowStock"></div></div>
+    </div>
+    <div class="notice">O lucro é uma estimativa: preço recebido menos custo da peça, taxas, embalagem, frete pago por você e outras despesas registradas. O DAS é acompanhado separadamente no financeiro.</div>
+  </section>
+
+  <section id="estoque" class="section">
+    <div class="row between"><h2>Estoque</h2><button onclick="openProduct()">+ Nova peça</button></div>
+    <div class="card">
+      <div class="row"><input id="productSearch" placeholder="Buscar por nome, código ou categoria" oninput="renderProducts()"></div>
+      <div class="tablewrap"><table><thead><tr><th>Peça</th><th>Categoria</th><th>Qtd.</th><th>Custo unit.</th><th>Preço sugerido</th><th>Ações</th></tr></thead><tbody id="productRows"></tbody></table></div>
+      <div class="muted">Cadastre suas peças e atualize as quantidades. Ao registrar uma venda, o estoque é baixado automaticamente.</div>
+    </div>
+  </section>
+
+  <section id="vendas" class="section">
+    <div class="row between"><h2>Vendas</h2><button onclick="openSale()">+ Registrar venda</button></div>
+    <div class="card">
+      <div class="tablewrap"><table><thead><tr><th>Data</th><th>Peça</th><th>Canal</th><th>Qtd.</th><th>Total</th><th>Lucro</th></tr></thead><tbody id="saleRows"></tbody></table></div>
+      <div class="muted">Registre cada venda, inclusive as recebidas por Pix, dinheiro ou cartão.</div>
+    </div>
+  </section>
+
+  <section id="financeiro" class="section">
+    <h2>Financeiro</h2>
+    <div class="grid">
+      <div class="card kpi"><small>Faturamento acumulado</small><strong id="fRevenue">R$ 0,00</strong></div>
+      <div class="card kpi"><small>Lucro bruto estimado</small><strong id="fProfit">R$ 0,00</strong></div>
+      <div class="card kpi"><small>Despesas registradas</small><strong id="fExpenses">R$ 0,00</strong></div>
+      <div class="card kpi"><small>Resultado após DAS</small><strong id="fNet">R$ 0,00</strong></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="row between"><h3>Despesas e DAS</h3><button onclick="openExpense()">+ Lançar despesa</button></div>
+      <div class="formgrid">
+        <div class="field"><label>DAS mensal pago (R$)</label><input id="dasValue" type="number" min="0" step=".01" placeholder="Ex.: 82,05"></div>
+        <div class="field"><label>Mês de referência</label><input id="dasMonth" type="month"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button onclick="saveDas()">Salvar DAS</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Ação</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
+    </div>
+    <div class="notice">O valor do DAS pode variar conforme a atividade e o ano. Informe o valor efetivamente emitido no PGMEI. Esta ferramenta é um controle gerencial, não substitui a apuração fiscal.</div>
+  </section>
+
+  <section id="dados" class="section">
+    <h2>Backup e ajustes</h2>
+    <div class="card">
+      <h3>Seus dados</h3>
+      <p class="muted">As informações ficam salvas neste navegador e neste aparelho. Faça backup regularmente para não perder seus registros.</p>
+      <div class="row">
+        <button onclick="exportData()">Baixar backup</button>
+        <label class="btn secondary" style="display:inline-flex;align-items:center;cursor:pointer">Restaurar backup<input type="file" accept="application/json" id="importFile" style="display:none" onchange="importData(event)"></label>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Preferências</h3>
+      <div class="field"><label>Meta de faturamento mensal (R$)</label><input id="goalValue" type="number" min="0" step=".01" placeholder="Ex.: 3000"></div>
+      <button style="margin-top:10px" onclick="saveGoal()">Salvar meta</button>
+      <div class="notice">Para instalar como PWA no iPhone: publique esta pasta em um endereço HTTPS; abra o endereço no Safari, toque em Compartilhar e escolha “Adicionar à Tela de Início”.</div>
+    </div>
+  </section>
+  <footer>AHAVA · Gestão de semijoias · Seus dados permanecem no dispositivo</footer>
+</main>
+
+<div class="modal" id="productModal"><div class="modalbox">
+  <button class="close" onclick="closeModal('productModal')">Fechar</button><h2 id="productTitle">Nova peça</h2>
+  <input type="hidden" id="pId">
+  <div class="formgrid">
+    <div class="field"><label>Nome da peça *</label><input id="pName" placeholder="Ex.: Colar delicado"></div>
+    <div class="field"><label>Código / SKU</label><input id="pSku" placeholder="Ex.: COL001"></div>
+    <div class="field"><label>Categoria</label><select id="pCategory"><option>Colar</option><option>Brinco</option><option>Pulseira</option><option>Anel</option><option>Conjunto</option><option>Terço</option><option>Outro</option></select></div>
+    <div class="field"><label>Quantidade em estoque *</label><input id="pQty" type="number" min="0" step="1" value="1"></div>
+    <div class="field"><label>Custo unitário (R$) *</label><input id="pCost" type="number" min="0" step=".01"></div>
+    <div class="field"><label>Preço de venda (R$) *</label><input id="pPrice" type="number" min="0" step=".01"></div>
+    <div class="field"><label>Estoque mínimo</label><input id="pMin" type="number" min="0" step="1" value="2"></div>
+  </div>
+  <button style="margin-top:16px;width:100%" onclick="saveProduct()">Salvar peça</button>
+</div></div>
+
+<div class="modal" id="saleModal"><div class="modalbox">
+  <button class="close" onclick="closeModal('saleModal')">Fechar</button><h2>Registrar venda</h2>
+  <div class="formgrid">
+    <div class="field full"><label>Peça *</label><select id="sProduct"></select></div>
+    <div class="field"><label>Quantidade *</label><input id="sQty" type="number" min="1" step="1" value="1"></div>
+    <div class="field"><label>Preço unitário recebido (R$)</label><input id="sPrice" type="number" min="0" step=".01"></div>
+    <div class="field"><label>Canal</label><select id="sChannel"><option>Instagram/WhatsApp</option><option>Mercado Livre</option><option>Presencial</option><option>Outro</option></select></div>
+    <div class="field"><label>Taxas da venda (R$)</label><input id="sFees" type="number" min="0" step=".01" value="0"></div>
+    <div class="field"><label>Embalagem (R$)</label><input id="sPack" type="number" min="0" step=".01" value="0"></div>
+    <div class="field"><label>Frete pago por você (R$)</label><input id="sShip" type="number" min="0" step=".01" value="0"></div>
+    <div class="field"><label>Outros custos (R$)</label><input id="sOther" type="number" min="0" step=".01" value="0"></div>
+    <div class="field"><label>Data</label><input id="sDate" type="date"></div>
+  </div>
+  <button style="margin-top:16px;width:100%" onclick="saveSale()">Confirmar venda e baixar estoque</button>
+</div></div>
+
+<div class="modal" id="expenseModal"><div class="modalbox">
+  <button class="close" onclick="closeModal('expenseModal')">Fechar</button><h2>Lançar despesa</h2>
+  <div class="formgrid">
+    <div class="field full"><label>Descrição *</label><input id="eDesc" placeholder="Ex.: embalagem, reposição, tarifa"></div>
+    <div class="field"><label>Valor (R$) *</label><input id="eValue" type="number" min="0" step=".01"></div>
+    <div class="field"><label>Data</label><input id="eDate" type="date"></div>
+  </div>
+  <button style="margin-top:16px;width:100%" onclick="saveExpense()">Salvar despesa</button>
+</div></div>
+
+<script>
+const KEY='ahava_pwa_v1';
+let db=JSON.parse(localStorage.getItem(KEY)||'{"products":[],"sales":[],"expenses":[],"das":{},"goal":0}');
+const money=n=>(Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const today=()=>new Date().toISOString().slice(0,10);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function persist(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function showTab(id){document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===id));}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+function monthKey(d){return (d||today()).slice(0,7)}
+function saleTotal(s){return s.price*s.qty}
+function saleProfit(s){return saleTotal(s)-(s.cost*s.qty)-s.fees-s.pack-s.ship-s.other}
+function renderAll(){renderDashboard();renderProducts();renderSales();renderFinance();document.getElementById('today').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});document.getElementById('goalValue').value=db.goal||''}
+function renderDashboard(){
+ const m=monthKey(today()), salesM=db.sales.filter(s=>monthKey(s.date)===m);
+ const rev=salesM.reduce((a,s)=>a+saleTotal(s),0), prof=salesM.reduce((a,s)=>a+saleProfit(s),0);
+ const stock=db.products.reduce((a,p)=>a+Number(p.qty),0), invest=db.products.reduce((a,p)=>a+p.cost*p.qty,0);
+ document.getElementById('periodLabel').textContent=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+ kRevenue.textContent=money(rev);kProfit.textContent=money(prof);kStock.textContent=stock; kInvest.textContent=money(invest);
+ const months=[];for(let i=5;i>=0;i--){let d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);let key=d.toISOString().slice(0,7);months.push({key,label:d.toLocaleDateString('pt-BR',{month:'short'}),value:db.sales.filter(s=>monthKey(s.date)===key).reduce((a,s)=>a+saleTotal(s),0)})}
+ let max=Math.max(1,...months.map(x=>x.value));
+ revenueChart.innerHTML=months.map(x=>`<div class="barrow"><span>${x.label}</span><div class="bar"><i style="width:${x.value/max*100}%"></i></div><b>${money(x.value)}</b></div>`).join('');
+ let low=db.products.filter(p=>p.qty<=p.min);
+ lowStock.innerHTML=low.length?low.map(p=>`<div class="row between" style="padding:7px 0;border-bottom:1px solid var(--line)"><span>${esc(p.name)}</span><span class="pill low">${p.qty} un.</span></div>`).join(''):'<div class="empty">Nenhuma peça abaixo do estoque mínimo. ✨</div>';
+}
+function renderProducts(){
+ let q=(productSearch.value||'').toLowerCase();
+ let list=db.products.filter(p=>(p.name+' '+p.sku+' '+p.category).toLowerCase().includes(q));
+ productRows.innerHTML=list.length?list.map(p=>`<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.sku)}</span></td><td>${esc(p.category)}</td><td><span class="pill ${p.qty<=p.min?'low':''}">${p.qty}</span></td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td><div class="actions"><button class="secondary" onclick="editProduct('${p.id}')">Editar</button><button class="danger" onclick="deleteProduct('${p.id}')">Excluir</button></div></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Cadastre sua primeira peça para começar.</td></tr>';
+}
+function openProduct(p=null){pId.value=p?.id||'';productTitle.textContent=p?'Editar peça':'Nova peça';pName.value=p?.name||'';pSku.value=p?.sku||'';pCategory.value=p?.category||'Colar';pQty.value=p?.qty??1;pCost.value=p?.cost??'';pPrice.value=p?.price??'';pMin.value=p?.min??2;productModal.classList.add('open')}
+function editProduct(id){let p=db.products.find(x=>x.id===id);openProduct(p)}
+function saveProduct(){
+ let name=pName.value.trim(),cost=Number(pCost.value),price=Number(pPrice.value),qty=Number(pQty.value);
+ if(!name||pCost.value===''||pPrice.value===''||qty<0){alert('Preencha nome, quantidade, custo e preço corretamente.');return}
+ let p={id:pId.value||crypto.randomUUID(),name,sku:pSku.value.trim(),category:pCategory.value,qty,cost,price,min:Number(pMin.value)||0};
+ let i=db.products.findIndex(x=>x.id===p.id);if(i>=0)db.products[i]=p;else db.products.push(p);
+ closeModal('productModal');persist();
+}
+function deleteProduct(id){if(db.sales.some(s=>s.productId===id)){alert('Esta peça já possui vendas registradas. Não é possível excluí-la para preservar o histórico.');return}if(confirm('Excluir esta peça do estoque?')){db.products=db.products.filter(p=>p.id!==id);persist()}}
+function openSale(){
+ if(!db.products.length){alert('Cadastre uma peça no estoque antes de registrar uma venda.');showTab('estoque');return}
+ sProduct.innerHTML=db.products.map(p=>`<option value="${p.id}">${esc(p.name)} — ${p.qty} un. disponíveis</option>`).join('');
+ sDate.value=today();sQty.value=1;sFees.value=sPack.value=sShip.value=sOther.value=0;updateSalePrice();sProduct.onchange=updateSalePrice;saleModal.classList.add('open');
+}
+function updateSalePrice(){let p=db.products.find(x=>x.id===sProduct.value);sPrice.value=p?.price??''}
+function saveSale(){
+ let p=db.products.find(x=>x.id===sProduct.value),qty=Number(sQty.value),price=Number(sPrice.value);
+ if(!p||qty<1||qty>p.qty||price<0||sPrice.value===''){alert('Confira a peça, a quantidade disponível e o preço.');return}
+ let s={id:crypto.randomUUID(),productId:p.id,name:p.name,cost:p.cost,qty,price,channel:sChannel.value,fees:Number(sFees.value)||0,pack:Number(sPack.value)||0,ship:Number(sShip.value)||0,other:Number(sOther.value)||0,date:sDate.value||today()};
+ p.qty-=qty;db.sales.unshift(s);closeModal('saleModal');persist();
+}
+function renderSales(){saleRows.innerHTML=db.sales.length?db.sales.slice(0,100).map(s=>`<tr><td>${new Date(s.date+'T12:00:00').toLocaleDateString('pt-BR')}</td><td>${esc(s.name)}</td><td>${esc(s.channel)}</td><td>${s.qty}</td><td>${money(saleTotal(s))}</td><td>${money(saleProfit(s))}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">Nenhuma venda registrada ainda.</td></tr>'}
+function openExpense(){eDesc.value='';eValue.value='';eDate.value=today();expenseModal.classList.add('open')}
+function saveExpense(){if(!eDesc.value.trim()||Number(eValue.value)<=0){alert('Informe descrição e valor.');return}db.expenses.unshift({id:crypto.randomUUID(),desc:eDesc.value.trim(),value:Number(eValue.value),date:eDate.value||today()});closeModal('expenseModal');persist()}
+function removeExpense(id){if(confirm('Excluir esta despesa?')){db.expenses=db.expenses.filter(e=>e.id!==id);persist()}}
+function renderFinance(){
+ let rev=db.sales.reduce((a,s)=>a+saleTotal(s),0),profit=db.sales.reduce((a,s)=>a+saleProfit(s),0),expenses=db.expenses.reduce((a,e)=>a+e.value,0),das=Object.values(db.das).reduce((a,v)=>a+Number(v),0);
+ fRevenue.textContent=money(rev);fProfit.textContent=money(profit);fExpenses.textContent=money(expenses+das);fNet.textContent=money(profit-expenses-das);
+ expenseRows.innerHTML=db.expenses.length?db.expenses.map(e=>`<tr><td>${new Date(e.date+'T12:00:00').toLocaleDateString('pt-BR')}</td><td>${esc(e.desc)}</td><td>${money(e.value)}</td><td><button class="danger" onclick="removeExpense('${e.id}')">Excluir</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Nenhuma despesa lançada.</td></tr>';
+ let mk=monthKey();dasMonth.value=mk;dasValue.value=db.das[mk]??'';
+}
+function saveDas(){let m=dasMonth.value,v=Number(dasValue.value);if(!m||v<0||dasValue.value===''){alert('Informe mês e valor do DAS.');return}db.das[m]=v;persist();alert('DAS salvo!')}
+function saveGoal(){db.goal=Number(goalValue.value)||0;persist();alert('Meta salva!')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='backup-ahava-'+today()+'.json';a.click();URL.revokeObjectURL(url)}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.products||!x.sales)throw 0;if(confirm('Restaurar este backup? Os dados atuais serão substituídos.')){db={products:x.products,sales:x.sales,expenses:x.expenses||[],das:x.das||{},goal:x.goal||0};persist();alert('Backup restaurado!')}}catch(err){alert('Arquivo de backup inválido.')}};r.readAsText(f)}
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+renderAll();
+</script>
+</body>
+</html>

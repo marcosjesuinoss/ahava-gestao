@@ -1,0 +1,17 @@
+{
+  "name": "AHAVA Semijoias • Gestão",
+  "short_name": "AHAVA Gestão",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f6f1",
+  "theme_color": "#536b52",
+  "description": "Gestão de estoque, vendas, faturamento e lucro.",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

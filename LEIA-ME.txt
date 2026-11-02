@@ -1,0 +1,24 @@
+AHAVA • PWA de gestão de semijoias
+
+CONTEÚDO
+- index.html: aplicativo
+- manifest.webmanifest: configuração PWA
+- sw.js: cache/offline
+- icon.svg: ícone
+
+COMO PUBLICAR PARA INSTALAR NO IPHONE
+1. Publique todos os arquivos desta pasta em uma hospedagem HTTPS (por exemplo, GitHub Pages, Netlify ou Vercel).
+2. Abra o endereço publicado no Safari do iPhone.
+3. Toque em Compartilhar > Adicionar à Tela de Início.
+4. Abra o ícone AHAVA na tela inicial.
+
+DADOS E PRIVACIDADE
+- Os dados são gravados localmente no navegador/aparelho (localStorage).
+- Não há conta, sincronização na nuvem ou envio dos dados para servidor.
+- Use a aba Backup e ajustes > Baixar backup com frequência.
+- Para trocar de aparelho, restaure o arquivo JSON de backup.
+
+OBSERVAÇÕES
+- O lucro é estimado com base nos custos informados.
+- O DAS é registrado manualmente e não é calculado por venda.
+- Esta ferramenta é gerencial e não substitui obrigações fiscais/contábeis.
