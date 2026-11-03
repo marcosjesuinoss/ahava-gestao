@@ -16,12 +16,14 @@
     :root{--brand:#536b52;--accent:#536b52;--ink:#2e342d;--muted:#778074;--bg:#f5f6f1;--card:#fff;--field:#fff;--line:#e4e8df;--soft:#edf1e9;--red:#b34d43;--redsoft:#f8e9e6;--warn:#c98a2e;--warnsoft:#f7eedf;--info:#4f7cae;--infosoft:#e6eef7;--ok:#4f9a4f;--oksoft:#e5f2e3;--c-rec:#5aa95a;--c-cost:#9a6cc6;--c-due:#d9a23a;--c-late:#d0574c;--shadow:0 3px 14px #25351c0d}
     @media (prefers-color-scheme:dark){:root{--brand:#4e684d;--accent:#a6c7a2;--ink:#e8ece4;--muted:#9aa395;--bg:#161a15;--card:#22271f;--field:#2a3027;--line:#363d33;--soft:#2f372c;--red:#e57c70;--redsoft:#3a2522;--warn:#e0a94f;--warnsoft:#3a2f1e;--info:#86aee0;--infosoft:#1f2b3a;--ok:#7cc77a;--oksoft:#213321;--shadow:none}}
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    header{background:var(--brand);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 18px 14px;position:sticky;top:0;z-index:5}
+    /* Estrutura de app: só o conteúdo rola; topo e abas ficam parados (evita o "elástico" do iPhone) */
+    html,body{height:100%;overflow:hidden}
+    body{margin:0;position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    header{flex:none;background:var(--brand);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 18px 14px;z-index:5}
     .head{max-width:900px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
     .brand{font-family:Georgia,serif;font-size:23px;letter-spacing:2px}.sub{font-size:11px;opacity:.85;letter-spacing:.5px}
-    main{max-width:900px;margin:16px auto;padding:0 14px calc(96px + env(safe-area-inset-bottom))}
-    .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+    main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px max(14px,calc((100% - 900px)/2)) 24px}
+    .tabbar{flex:none;z-index:6;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
     .tabbar button{flex:1;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:11px;font-weight:600;border-radius:12px}
     .tabbar button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
     .tabbar button.active{color:var(--accent);background:var(--soft)}
@@ -403,7 +405,7 @@ function chargeMsg(o,i){return `Olá, ${custName(o)}! Tudo bem? 😊 Passando pa
 function go(tab){
   document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===tab));
   document.querySelectorAll('.tabbar button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));
-  window.scrollTo(0,0);
+  document.querySelector('main').scrollTop=0;
   if(tab==='gestao')scrollBarsToNow();
 }
 function setMore(k){
