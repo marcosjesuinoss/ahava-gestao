@@ -33,8 +33,11 @@ COMO INSTALAR NO IPHONE
 3. Abra o ícone AHAVA na tela inicial.
 
 COMO ATUALIZAR
-- Altere os arquivos e envie para o GitHub (git add, commit, push).
-- Ao mudar o app, troque o nome do cache em sw.js (ex.: ahava-gestao-v2 -> v3).
+- No iPhone: toque no botão ↻ no canto superior direito (ou Mais > Backup >
+  Atualizar app). Quando sair versão nova, também aparece o aviso
+  "Nova versão disponível". Os dados não são apagados.
+- No código: altere os arquivos e envie para o GitHub (git add, commit, push).
+  Troque APP_VERSION no index.html e o nome do cache em sw.js a cada versão.
 
 DADOS E PRIVACIDADE
 - Os dados são gravados localmente no navegador/aparelho (localStorage).

@@ -21,6 +21,10 @@
     body{margin:0;position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     header{flex:none;background:var(--brand);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 18px 14px;z-index:5}
     .head{max-width:900px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .hbtn{width:36px;height:36px;padding:0;border-radius:50%;background:#ffffff26;color:#fff;flex:none}
+    .hbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .hbtn.spin svg{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    .updbar{flex:none;background:var(--warnsoft);color:var(--ink);border-bottom:1px solid var(--line);padding:8px 14px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:600}.updbar[hidden]{display:none}
     .brand{font-family:Georgia,serif;font-size:23px;letter-spacing:2px}.sub{font-size:11px;opacity:.85;letter-spacing:.5px}
     main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px max(14px,calc((100% - 900px)/2)) 24px}
     .tabbar{flex:none;z-index:6;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
@@ -88,7 +92,8 @@
   </style>
 </head>
 <body>
-<header><div class="head"><div><div class="brand">AHAVA</div><div class="sub">SEMIJOIAS · GESTÃO</div></div><div class="sub" id="todayLbl"></div></div></header>
+<header><div class="head"><div><div class="brand">AHAVA</div><div class="sub">SEMIJOIAS · GESTÃO</div></div><div class="row nowrap" style="gap:10px"><div class="sub" id="todayLbl"></div><button class="hbtn" id="updBtn" onclick="updateApp()" aria-label="Atualizar app" title="Atualizar app"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button></div></div></header>
+<div class="updbar" id="updBar" hidden>Nova versão disponível <button class="sm" onclick="updateApp()">Atualizar agora</button></div>
 <main>
   <!-- INÍCIO -->
   <section id="inicio" class="section active">
@@ -199,6 +204,11 @@
         <h3>Preferências</h3>
         <div class="field" style="margin-top:12px"><label>Meta de vendas mensal (R$)</label><input id="goalValue" type="number" inputmode="decimal" min="0" step=".01" placeholder="Ex.: 3000"></div>
         <button style="margin-top:10px" onclick="saveGoal()">Salvar meta</button>
+      </div>
+      <div class="card">
+        <h3>Atualização do app</h3>
+        <p class="muted">Versão instalada: <b id="appVersion"></b>. Toque abaixo para buscar a versão mais nova. Seus dados não são apagados.</p>
+        <button onclick="updateApp()">↻ Atualizar app</button>
         <div class="notice">Para instalar no iPhone: abra o endereço no Safari, toque em Compartilhar e escolha “Adicionar à Tela de Início”.</div>
       </div>
     </div>
@@ -814,7 +824,32 @@ function importData(e){
 
 $('dasMonth').addEventListener('change',()=>{$('dasValue').value=db.das[$('dasMonth').value]??''});
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
-if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+/* ---------- atualização do app ---------- */
+const APP_VERSION='2026.11.02-3';
+$('appVersion').textContent=APP_VERSION;
+// Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
+async function updateApp(){
+  if(document.querySelector('.modal.open')&&!confirm('Há uma janela aberta. Atualizar agora vai fechá-la sem salvar. Continuar?'))return;
+  $('updBtn').classList.add('spin');toast('Buscando atualização…');
+  try{
+    const reg=await navigator.serviceWorker?.getRegistration();
+    if(reg)await reg.update();
+    if(window.caches)await Promise.all((await caches.keys()).map(k=>caches.delete(k)));
+  }catch(e){}
+  try{sessionStorage.setItem('ahava_upd','1')}catch(e){}
+  location.reload();
+}
+let justUpdated=false;
+try{justUpdated=!!sessionStorage.getItem('ahava_upd');sessionStorage.removeItem('ahava_upd')}catch(e){}
+if(justUpdated)setTimeout(()=>toast('App atualizado ✓ versão '+APP_VERSION),300);
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
+  const hadController=!!navigator.serviceWorker.controller&&!justUpdated;
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    // ao voltar para o app, verifica se saiu versão nova
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update().catch(()=>{})});
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController)$('updBar').hidden=false});
+}
 renderAll();
 </script>
 </body>
