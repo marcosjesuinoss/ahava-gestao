@@ -17,16 +17,18 @@
     :root{--brand:#5a7458;--brand-grad:linear-gradient(135deg,#86a082 0%,#5a7458 100%);--accent:#4d654c;--ink:#2f3430;--muted:#8b867b;--bg:#f8f6f1;--bg-grad:linear-gradient(180deg,#eef2ea 0,#f8f6f1 360px);--card:#fff;--field:#fffdf9;--line:#ece7dd;--soft:#f3efe7;--soft2:#e9efe5;--gold:#a8834a;--goldsoft:#f5eddf;--sec-ink:#7a6249;
       --head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.4),transparent 55%),linear-gradient(125deg,#5b7459 0%,#829a7e 50%,#b8a17a 100%);
       --tab-bg:rgba(255,255,255,.92);--red:#b34d43;--redsoft:#f9ebe8;--warn:#c08431;--warnsoft:#f8efdf;--info:#4f7cae;--infosoft:#e8eff7;--ok:#4f9a4f;--oksoft:#e7f2e5;
-      --c-rec:#6aae68;--c-cost:#a27fcb;--c-due:#d8a648;--c-late:#d36457;--shadow:0 6px 22px rgba(90,74,40,.07);--shadow-btn:0 6px 16px rgba(90,116,88,.28);--app-h:100dvh}
+      --c-rec:#6aae68;--c-cost:#a27fcb;--c-due:#d8a648;--c-late:#d36457;--shadow:0 6px 22px rgba(90,74,40,.07);--shadow-btn:0 6px 16px rgba(90,116,88,.28)}
     @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--brand:#5d7a5b;--brand-grad:linear-gradient(135deg,#71906d,#4c654b);--accent:#bcd3b6;--ink:#ecefe7;--muted:#a39e93;--bg:#141613;--bg-grad:linear-gradient(180deg,#1c211a 0,#141613 360px);--card:#1e221c;--field:#252a23;--line:#2f352c;--soft:#282c25;--soft2:#25301f;--gold:#d6b47c;--goldsoft:#2f281d;--sec-ink:#e0c28f;--head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.10),transparent 55%),linear-gradient(125deg,#2c3829 0%,#3c4a38 50%,#544832 100%);--tab-bg:rgba(30,34,28,.94);--red:#e8857a;--redsoft:#3a2522;--warn:#e2ad55;--warnsoft:#382d1c;--info:#8bb2e2;--infosoft:#1f2b3a;--ok:#82c97f;--oksoft:#20321f;--shadow:none;--shadow-btn:none}}
     :root[data-theme="dark"]{--brand:#5d7a5b;--brand-grad:linear-gradient(135deg,#71906d,#4c654b);--accent:#bcd3b6;--ink:#ecefe7;--muted:#a39e93;--bg:#141613;--bg-grad:linear-gradient(180deg,#1c211a 0,#141613 360px);--card:#1e221c;--field:#252a23;--line:#2f352c;--soft:#282c25;--soft2:#25301f;--gold:#d6b47c;--goldsoft:#2f281d;--sec-ink:#e0c28f;--head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.10),transparent 55%),linear-gradient(125deg,#2c3829 0%,#3c4a38 50%,#544832 100%);--tab-bg:rgba(30,34,28,.94);--red:#e8857a;--redsoft:#3a2522;--warn:#e2ad55;--warnsoft:#382d1c;--info:#8bb2e2;--infosoft:#1f2b3a;--ok:#82c97f;--oksoft:#20321f;--shadow:none;--shadow-btn:none}
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     /* sem barras de rolagem visíveis */
     *{scrollbar-width:none}*::-webkit-scrollbar{display:none}
-    /* Estrutura de app: só o conteúdo rola; topo e abas ficam parados. A altura vem do JS (--app-h) para ocupar a tela toda no iPhone */
-    /* Sem overflow:hidden em html/body: no iPhone isso recorta a tela na altura (menor) que o sistema informa e corta a barra de abas */
+    /* Estrutura de app: só o conteúdo rola; topo e abas ficam parados */
     html{background:var(--bg);height:100%;overscroll-behavior:none;-webkit-text-size-adjust:100%}
-    body{margin:0;position:fixed;top:0;left:0;right:0;height:var(--app-h);overscroll-behavior:none;display:flex;flex-direction:column;background:var(--bg-grad);background-color:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    /* iOS 26 (WebKit 301108): no app instalado a tela vem mais curta (altura da barra de status) enquanto a página
+       for menor que a tela, e nada fixo é desenhado abaixo disso. Uma página com a altura da tela libera a área inteira. */
+    @media (display-mode: standalone){html{height:auto;min-height:min(100lvh,calc(100% + env(safe-area-inset-top)))}}
+    body{margin:0;position:fixed;inset:0;overscroll-behavior:none;display:flex;flex-direction:column;background:var(--bg-grad);background-color:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     header{flex:none;background:var(--head-grad);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 20px 18px;border-radius:0 0 26px 26px;box-shadow:0 8px 24px rgba(60,70,50,.16);z-index:5}
     .head{max-width:900px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
     .brand{font-family:"Didot","Bodoni 72",Georgia,serif;font-size:27px;letter-spacing:6px;line-height:1.1}
@@ -85,8 +87,8 @@
     .inst{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--line)}.inst:last-child{border-bottom:0}
     .itemrow{display:grid;grid-template-columns:1fr 60px 86px 38px;gap:6px;margin-bottom:8px;align-items:center}.itemrow button{padding:10px 0}
     .totals{background:var(--soft);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:14px}
-    .modal{position:fixed;top:0;left:0;right:0;height:var(--app-h);background:rgba(20,22,18,.45);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:10;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}.modal.open{display:flex}
-    .modalbox{background:var(--card);color:var(--ink);border-radius:24px;padding:22px;width:min(560px,100%);max-height:calc(var(--app-h) - 60px - env(safe-area-inset-top));overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+    .modal{position:fixed;inset:0;background:rgba(20,22,18,.45);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:10;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}.modal.open{display:flex}
+    .modalbox{background:var(--card);color:var(--ink);border-radius:24px;padding:22px;width:min(560px,100%);max-height:calc(100% - 40px - env(safe-area-inset-top));overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
     .modalbox h2{margin-bottom:16px;padding-right:80px;font-size:24px}.close{float:right;background:var(--soft);color:var(--muted);padding:6px 12px;box-shadow:none;font-size:13px}
     details summary{cursor:pointer;color:var(--sec-ink);font-weight:650;font-size:13px;margin-top:10px;list-style:none;text-align:center}details summary::-webkit-details-marker{display:none}
     .progress{height:10px;background:var(--soft);border-radius:8px;overflow:hidden;margin-top:10px}.progress i{display:block;height:100%;background:linear-gradient(90deg,#c9b083,var(--c-rec));border-radius:8px}
@@ -858,14 +860,12 @@ function importData(e){
 $('dasMonth').addEventListener('change',()=>{$('dasValue').value=db.das[$('dasMonth').value]??''});
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 /* ---------- tela, zoom e aparência ---------- */
-// No iPhone (app instalado) o navegador às vezes informa uma altura menor que a tela e sobra um espaço embaixo da barra de abas
-function fitHeight(){
-  let h=window.innerHeight;
-  if(navigator.standalone){const land=matchMedia('(orientation: landscape)').matches;h=Math.max(h,land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height))}
-  document.documentElement.style.setProperty('--app-h',h+'px');
-  const s=$('screenInfo');if(s)s.textContent=`Tela: ${h}px · janela ${window.innerHeight}px · aparelho ${screen.height}px · ${navigator.standalone?'app instalado':'navegador'}`;
+// medidas da tela em Configurações, para diagnóstico
+function screenInfo(){
+  const s=$('screenInfo');if(!s)return;
+  s.textContent=`Tela: app ${Math.round(document.body.getBoundingClientRect().height)}px · janela ${window.innerHeight}px · aparelho ${screen.height}px · ${navigator.standalone?'app instalado':'navegador'}`;
 }
-fitHeight();addEventListener('resize',fitHeight);addEventListener('orientationchange',()=>setTimeout(fitHeight,300));
+screenInfo();addEventListener('resize',screenInfo);
 // bloqueia o zoom de pinça e de toque duplo
 ['gesturestart','gesturechange'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 // bloqueia pinça e impede arrastar a tela fora das áreas que rolam (topo e abas ficam sempre parados)
@@ -878,7 +878,7 @@ function setTheme(v){
 setTheme(document.documentElement.dataset.theme||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.02-5';
+const APP_VERSION='2026.11.02-6';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
