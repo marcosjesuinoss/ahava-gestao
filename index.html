@@ -24,8 +24,9 @@
     /* sem barras de rolagem visíveis */
     *{scrollbar-width:none}*::-webkit-scrollbar{display:none}
     /* Estrutura de app: só o conteúdo rola; topo e abas ficam parados. A altura vem do JS (--app-h) para ocupar a tela toda no iPhone */
-    html{background:var(--bg);height:100%;overflow:hidden;-webkit-text-size-adjust:100%}
-    body{margin:0;position:fixed;top:0;left:0;right:0;height:var(--app-h);overflow:hidden;display:flex;flex-direction:column;background:var(--bg-grad);background-color:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    /* Sem overflow:hidden em html/body: no iPhone isso recorta a tela na altura (menor) que o sistema informa e corta a barra de abas */
+    html{background:var(--bg);height:100%;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+    body{margin:0;position:fixed;top:0;left:0;right:0;height:var(--app-h);overscroll-behavior:none;display:flex;flex-direction:column;background:var(--bg-grad);background-color:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     header{flex:none;background:var(--head-grad);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 20px 18px;border-radius:0 0 26px 26px;box-shadow:0 8px 24px rgba(60,70,50,.16);z-index:5}
     .head{max-width:900px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
     .brand{font-family:"Didot","Bodoni 72",Georgia,serif;font-size:27px;letter-spacing:6px;line-height:1.1}
@@ -218,6 +219,7 @@
       <h3>Atualização do app</h3>
       <p class="muted">Versão instalada: <b id="appVersion"></b>. Toque abaixo para buscar a versão mais nova. Seus dados não são apagados.</p>
       <button id="updBtn" onclick="updateApp()" style="width:100%">↻ Atualizar app</button>
+      <p class="muted" id="screenInfo" style="margin:10px 0 0;font-size:11px"></p>
     </div>
     <div class="card">
       <h3>Aparência</h3>
@@ -861,11 +863,13 @@ function fitHeight(){
   let h=window.innerHeight;
   if(navigator.standalone){const land=matchMedia('(orientation: landscape)').matches;h=Math.max(h,land?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height))}
   document.documentElement.style.setProperty('--app-h',h+'px');
+  const s=$('screenInfo');if(s)s.textContent=`Tela: ${h}px · janela ${window.innerHeight}px · aparelho ${screen.height}px · ${navigator.standalone?'app instalado':'navegador'}`;
 }
 fitHeight();addEventListener('resize',fitHeight);addEventListener('orientationchange',()=>setTimeout(fitHeight,300));
 // bloqueia o zoom de pinça e de toque duplo
 ['gesturestart','gesturechange'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
-document.addEventListener('touchmove',e=>{if(e.scale&&e.scale!==1)e.preventDefault()},{passive:false});
+// bloqueia pinça e impede arrastar a tela fora das áreas que rolam (topo e abas ficam sempre parados)
+document.addEventListener('touchmove',e=>{if((e.scale&&e.scale!==1)||!e.target.closest('main,.modal,.bars,.tablewrap'))e.preventDefault()},{passive:false});
 function setTheme(v){
   try{v?localStorage.setItem('ahava_theme',v):localStorage.removeItem('ahava_theme')}catch(e){}
   if(v)document.documentElement.dataset.theme=v;else delete document.documentElement.dataset.theme;
@@ -874,7 +878,7 @@ function setTheme(v){
 setTheme(document.documentElement.dataset.theme||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.02-4';
+const APP_VERSION='2026.11.02-5';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
