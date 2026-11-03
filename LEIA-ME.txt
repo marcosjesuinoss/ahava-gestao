@@ -25,7 +25,8 @@ O QUE O APP FAZ
   Resultado por mês, Recebidos x Meios de pagamento, Recebido x Em atraso,
   Valores a receber x Custos previstos, Top 5 clientes, Peças mais vendidas
   e Clientes novos.
-- Mais: clientes, despesas (pagas ou a pagar), DAS, backup e meta.
+- Mais: clientes, despesas (pagas ou a pagar) e DAS.
+- Configurações (engrenagem no topo): atualizar app, aparência, meta e backup.
 
 COMO INSTALAR NO IPHONE
 1. Abra o endereço acima no Safari do iPhone.
@@ -33,16 +34,18 @@ COMO INSTALAR NO IPHONE
 3. Abra o ícone AHAVA na tela inicial.
 
 COMO ATUALIZAR
-- No iPhone: toque no botão ↻ no canto superior direito (ou Mais > Backup >
-  Atualizar app). Quando sair versão nova, também aparece o aviso
+- No iPhone: toque na engrenagem (canto superior direito) > Configurações >
+  Atualizar app. Quando sair versão nova, também aparece o aviso
   "Nova versão disponível". Os dados não são apagados.
+- Em Configurações também ficam: aparência (automático/claro/escuro),
+  meta de vendas e backup.
 - No código: altere os arquivos e envie para o GitHub (git add, commit, push).
   Troque APP_VERSION no index.html e o nome do cache em sw.js a cada versão.
 
 DADOS E PRIVACIDADE
 - Os dados são gravados localmente no navegador/aparelho (localStorage).
 - Não há conta, sincronização na nuvem ou envio dos dados para servidor.
-- Use Mais > Backup > Baixar backup com frequência.
+- Use Configurações > Baixar backup com frequência.
 - Para trocar de aparelho, restaure o arquivo JSON de backup.
 - Backups da versão anterior (só "vendas") são convertidos automaticamente:
   cada venda vira um pedido concluído e pago.
