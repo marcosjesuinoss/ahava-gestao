@@ -25,8 +25,16 @@ O QUE O APP FAZ
   Resultado por mês, Recebidos x Meios de pagamento, Recebido x Em atraso,
   Valores a receber x Custos previstos, Top 5 clientes, Peças mais vendidas
   e Clientes novos.
+- Estoque: valor de venda, valor de custo, lucro potencial, peça com maior e
+  menor margem, margem de cada peça e sugestão de preço de venda (custo,
+  embalagem, tempo de preparo, outros custos, imposto, taxa do cartão e margem).
+- Pedidos: botão "Avançar" leva o pedido ao próximo status.
+- Gestão inteligente (Início e Gestão): alertas de cobrança, pedidos parados,
+  reposição, meta, ritmo de vendas, caixa, margens, peças paradas e clientes
+  para reativar.
 - Mais: clientes, despesas (pagas ou a pagar) e DAS.
-- Configurações (engrenagem no topo): atualizar app, aparência, meta e backup.
+- Configurações (engrenagem no topo): atualizar app, aparência, precificação,
+  meta e backup.
 
 COMO INSTALAR NO IPHONE
 1. Abra o endereço acima no Safari do iPhone.

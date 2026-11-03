@@ -93,6 +93,10 @@
     details summary{cursor:pointer;color:var(--sec-ink);font-weight:650;font-size:13px;margin-top:10px;list-style:none;text-align:center}details summary::-webkit-details-marker{display:none}
     .progress{height:10px;background:var(--soft);border-radius:8px;overflow:hidden;margin-top:10px}.progress i{display:block;height:100%;background:linear-gradient(90deg,#c9b083,var(--c-rec));border-radius:8px}
     .charts{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+    .ins{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45}.ins:last-child{border-bottom:0}
+    .ins .ico{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;background:var(--soft);font-size:16px}
+    .ins.bad .ico{background:var(--redsoft)}.ins.warn .ico{background:var(--warnsoft)}.ins.ok .ico{background:var(--oksoft)}.ins.info .ico{background:var(--infosoft)}
+    details.card summary{list-style:none}
     .back{background:none;box-shadow:none;color:var(--accent);padding:6px 0;font-size:15px}
     .optrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.optrow:last-child{border-bottom:0}
     /* gráficos */
@@ -126,6 +130,7 @@
       <div class="card kpi" style="--k:var(--c-late)"><small>Em atraso</small><strong id="kLate">R$ 0,00</strong></div>
     </div>
     <div class="card" id="goalCard" hidden></div>
+    <div class="card"><div class="row between nowrap"><h3>✨ Gestão inteligente</h3><button class="secondary sm" onclick="go('gestao')">Ver tudo</button></div><div id="homeInsights"></div></div>
     <div class="row" style="margin-top:12px"><button onclick="openOrder()">+ Novo pedido</button><button class="secondary" onclick="openProduct()">+ Nova peça</button></div>
     <div class="charts">
       <div class="card"><h3>Receber em breve</h3><div class="muted">Parcelas atrasadas e dos próximos 7 dias</div><div id="dueList"></div></div>
@@ -155,9 +160,10 @@
   <!-- ESTOQUE -->
   <section id="estoque" class="section">
     <div class="row between"><h2>Estoque</h2><button onclick="openProduct()">+ Nova peça</button></div>
+    <div id="stockSummary"></div>
     <div class="card">
       <input id="productSearch" placeholder="Buscar por nome, código ou categoria" oninput="renderProducts()">
-      <div class="tablewrap"><table><thead><tr><th>Peça</th><th>Categoria</th><th>Qtd.</th><th>Custo unit.</th><th>Preço</th><th>Ações</th></tr></thead><tbody id="productRows"></tbody></table></div>
+      <div class="tablewrap"><table><thead><tr><th>Peça</th><th>Categoria</th><th>Qtd.</th><th>Custo unit.</th><th>Preço</th><th>Margem</th><th>Ações</th></tr></thead><tbody id="productRows"></tbody></table></div>
       <div class="muted" style="margin-top:8px">As peças são reservadas (baixadas) ao criar um pedido e voltam ao estoque se o pedido for cancelado ou excluído.</div>
     </div>
   </section>
@@ -202,7 +208,7 @@
       <div class="card">
         <h3>DAS (MEI)</h3>
         <div class="formgrid" style="margin-top:12px">
-          <div class="field"><label>DAS mensal pago (R$)</label><input id="dasValue" type="number" inputmode="decimal" min="0" step=".01" placeholder="Ex.: 82,05"></div>
+          <div class="field"><label>DAS mensal pago (R$)</label><input id="dasValue" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex.: 82,05"></div>
           <div class="field"><label>Mês de referência</label><input id="dasMonth" type="month"></div>
         </div>
         <button style="margin-top:10px" onclick="saveDas()">Salvar DAS</button>
@@ -231,8 +237,21 @@
       <p class="muted" style="margin-bottom:0">“Automático” acompanha o modo claro/escuro do iPhone.</p>
     </div>
     <div class="card">
+      <h3>Precificação</h3>
+      <p class="muted">Usado na sugestão de preço e no cálculo de margem das peças.</p>
+      <div class="formgrid">
+        <div class="field"><label>Imposto sobre a venda (%)</label><input id="prTax" type="text" inputmode="decimal" data-pct autocomplete="off" placeholder="0"></div>
+        <div class="field"><label>Taxa do cartão/maquininha (%)</label><input id="prCard" type="text" inputmode="decimal" data-pct autocomplete="off" placeholder="Ex.: 4,99"></div>
+        <div class="field"><label>Valor da sua hora de trabalho (R$)</label><input id="prHourly" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex.: 20,00"></div>
+        <div class="field"><label>Margem de lucro padrão (%)</label><input id="prMargin" type="text" inputmode="decimal" data-pct autocomplete="off" placeholder="50"></div>
+        <div class="field full"><label>Embalagem padrão por peça (R$)</label><input id="prPack" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00"></div>
+      </div>
+      <div class="notice" style="margin-top:10px">MEI paga o DAS em valor fixo, não um percentual por venda. Deixe o imposto em 0% ou informe um percentual se quiser reservar dinheiro para impostos.</div>
+      <button style="margin-top:12px" onclick="savePricing()">Salvar precificação</button>
+    </div>
+    <div class="card">
       <h3>Meta de vendas</h3>
-      <div class="field" style="margin-top:12px"><label>Meta de vendas mensal (R$)</label><input id="goalValue" type="number" inputmode="decimal" min="0" step=".01" placeholder="Ex.: 3000"></div>
+      <div class="field" style="margin-top:12px"><label>Meta de vendas mensal (R$)</label><input id="goalValue" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex.: 3000"></div>
       <button style="margin-top:10px" onclick="saveGoal()">Salvar meta</button>
     </div>
     <div class="card">
@@ -265,10 +284,21 @@
     <div class="field"><label>Código / SKU</label><input id="pSku" placeholder="Ex.: COL001"></div>
     <div class="field"><label>Categoria</label><select id="pCategory"><option>Colar</option><option>Brinco</option><option>Pulseira</option><option>Anel</option><option>Conjunto</option><option>Terço</option><option>Outro</option></select></div>
     <div class="field"><label>Quantidade em estoque *</label><input id="pQty" type="number" inputmode="numeric" min="0" step="1" value="1"></div>
-    <div class="field"><label>Custo unitário (R$) *</label><input id="pCost" type="number" inputmode="decimal" min="0" step=".01"></div>
-    <div class="field"><label>Preço de venda (R$) *</label><input id="pPrice" type="number" inputmode="decimal" min="0" step=".01"></div>
+    <div class="field"><label>Custo unitário (R$) *</label><input id="pCost" type="text" inputmode="decimal" autocomplete="off" oninput="updatePriceCalc()"></div>
+    <div class="field"><label>Preço de venda (R$) *</label><input id="pPrice" type="text" inputmode="decimal" autocomplete="off" oninput="updatePriceCalc()"></div>
     <div class="field"><label>Estoque mínimo</label><input id="pMin" type="number" inputmode="numeric" min="0" step="1" value="2"></div>
   </div>
+  <details open style="margin-top:14px" class="card" id="pCalcBox">
+    <summary style="text-align:left;margin:0;font-size:15px">💡 Sugestão de preço de venda</summary>
+    <div class="formgrid" style="margin-top:12px">
+      <div class="field"><label>Tempo de preparo (min)</label><input id="pPrep" type="text" inputmode="decimal" data-pct autocomplete="off" placeholder="0" oninput="updatePriceCalc()"></div>
+      <div class="field"><label>Embalagem (R$)</label><input id="pPack" type="text" inputmode="decimal" autocomplete="off" oninput="updatePriceCalc()"></div>
+      <div class="field"><label>Outros custos por peça (R$)</label><input id="pExtra" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex.: brinde, etiqueta" oninput="updatePriceCalc()"></div>
+      <div class="field"><label>Margem de lucro desejada (%)</label><input id="pMargin" type="text" inputmode="decimal" data-pct autocomplete="off" oninput="updatePriceCalc()"></div>
+    </div>
+    <div class="muted" id="pPricingInfo" style="margin-top:8px"></div>
+    <div id="pCalc" style="margin-top:6px"></div>
+  </details>
   <label class="check"><input type="checkbox" id="pBuy"> Lançar as unidades adicionadas como compra de estoque (custo pago hoje)</label>
   <button style="margin-top:16px;width:100%" onclick="saveProduct()">Salvar peça</button>
 </div></div>
@@ -292,14 +322,14 @@
   <div id="oItems"></div>
   <button class="secondary sm" type="button" onclick="addItemRow();updateOrderTotals()">+ Adicionar peça</button>
   <div class="formgrid" style="margin-top:12px">
-    <div class="field"><label>Desconto (R$)</label><input id="oDiscount" type="number" inputmode="decimal" min="0" step=".01" value="0" oninput="updateOrderTotals()"></div>
+    <div class="field"><label>Desconto (R$)</label><input id="oDiscount" type="text" inputmode="decimal" autocomplete="off" value="0" oninput="updateOrderTotals()"></div>
   </div>
   <details style="margin-top:4px"><summary style="text-align:left">Custos da venda (taxas, embalagem, frete…)</summary>
     <div class="formgrid" style="margin-top:10px">
-      <div class="field"><label>Taxas da venda (R$)</label><input id="oFees" type="number" inputmode="decimal" min="0" step=".01" value="0" oninput="updateOrderTotals()"></div>
-      <div class="field"><label>Embalagem (R$)</label><input id="oPack" type="number" inputmode="decimal" min="0" step=".01" value="0" oninput="updateOrderTotals()"></div>
-      <div class="field"><label>Frete pago por você (R$)</label><input id="oShip" type="number" inputmode="decimal" min="0" step=".01" value="0" oninput="updateOrderTotals()"></div>
-      <div class="field"><label>Outros custos (R$)</label><input id="oOther" type="number" inputmode="decimal" min="0" step=".01" value="0" oninput="updateOrderTotals()"></div>
+      <div class="field"><label>Taxas da venda (R$)</label><input id="oFees" type="text" inputmode="decimal" autocomplete="off" value="0" oninput="updateOrderTotals()"></div>
+      <div class="field"><label>Embalagem (R$)</label><input id="oPack" type="text" inputmode="decimal" autocomplete="off" value="0" oninput="updateOrderTotals()"></div>
+      <div class="field"><label>Frete pago por você (R$)</label><input id="oShip" type="text" inputmode="decimal" autocomplete="off" value="0" oninput="updateOrderTotals()"></div>
+      <div class="field"><label>Outros custos (R$)</label><input id="oOther" type="text" inputmode="decimal" autocomplete="off" value="0" oninput="updateOrderTotals()"></div>
     </div>
   </details>
   <h3 style="margin:16px 0 8px">Pagamento</h3>
@@ -342,7 +372,7 @@
   <div class="formgrid">
     <div class="field full"><label>Descrição *</label><input id="eDesc" placeholder="Ex.: embalagens, reposição, anúncio"></div>
     <div class="field"><label>Categoria</label><select id="eCat"></select></div>
-    <div class="field"><label>Valor (R$) *</label><input id="eValue" type="number" inputmode="decimal" min="0" step=".01"></div>
+    <div class="field"><label>Valor (R$) *</label><input id="eValue" type="text" inputmode="decimal" autocomplete="off"></div>
     <div class="field full"><label>Data (ou vencimento, se ainda vai pagar)</label><input id="eDate" type="date"></div>
   </div>
   <label class="check"><input type="checkbox" id="ePaid" checked> Já foi paga</label>
@@ -367,7 +397,9 @@ const KEY='ahava_pwa_v1';
 const $=id=>document.getElementById(id);
 const STATUSES=[['pendente','Pendente','warn'],['aguardando_aprovacao','Aguardando aprovação','warn'],['aprovado','Aprovado','info'],['em_andamento','Em andamento','info'],['aguardando_pagamento','Aguardando pagamento','info'],['enviado','Enviado','info'],['concluido','Concluído','ok'],['garantia','Garantia','ok'],['cancelado','Cancelado','bad']].map(([k,l,c])=>({k,l,c}));
 const ST=Object.fromEntries(STATUSES.map(s=>[s.k,s]));
-const METHODS=['PIX','Dinheiro','Cartão de crédito','Cartão de débito','Crediário','Outro'];
+const METHODS=['PIX','Dinheiro','Cartão de crédito','Cartão de débito','Outro'];
+// caminho normal de um pedido; "Avançar" leva ao próximo passo (Garantia e Cancelado ficam fora)
+const FLOW=['pendente','aguardando_aprovacao','aprovado','em_andamento','aguardando_pagamento','enviado','concluido'];
 const CHANNELS=['Instagram/WhatsApp','Mercado Livre','Presencial','Outro'];
 const EXP_CATS=['Compra de estoque','Embalagem','Frete','Marketing','Taxas','Outros'];
 const PALETTE=['#5aa95a','#4bb3c4','#9a6cc6','#d9a23a','#d0574c','#4f7cae','#8a948a'];
@@ -381,7 +413,17 @@ const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return ymd(d)};
 const addMonths=(s,n)=>{const d=parseD(s),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+n);d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return ymd(d)};
 const fmtD=s=>s?parseD(s).toLocaleDateString('pt-BR'):'';
 const money=n=>(Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const round2=n=>Math.round((Number(n)||0)*100)/100;
+// Números digitados no padrão brasileiro: "13,38", "1.234,56" ou "13.38"
+function toNum(v){
+  if(typeof v==='number')return v;
+  let s=String(v??'').trim().replace(/[R$\s]/g,'');
+  if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');
+  const n=Number(s);return isFinite(n)?n:NaN;
+}
+const numOk=v=>String(v??'').trim()!==''&&!isNaN(toNum(v));
+const fmtIn=n=>(n===''||n==null||isNaN(Number(n)))?'':Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:false});
+const fmtPct=n=>(Number(n)||0).toLocaleString('pt-BR',{maximumFractionDigits:Math.abs(n)<10?2:1})+'%';
+const round2=n=>Math.round((toNum(n)||0)*100)/100;
 const sum=(list,f)=>list.reduce((a,x)=>a+(typeof f==='function'?f(x):Number(x[f])||0),0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
@@ -391,6 +433,7 @@ const opts=(list,sel)=>list.map(v=>`<option ${v===sel?'selected':''}>${esc(v)}</
 function migrate(x){
   x=x||{};
   const d={version:2,products:x.products||[],customers:x.customers||[],orders:x.orders||[],das:x.das||{},goal:x.goal||0,seq:x.seq||0,
+    pricing:{tax:0,card:0,hourly:0,margin:50,pack:0,...(x.pricing||{})},
     expenses:(x.expenses||[]).map(e=>({...e,category:e.category||'Outros',paid:e.paid!==false,paidAt:e.paid===false?null:(e.paidAt||e.date)}))};
   if(!x.version&&x.sales){ // versão 1: cada venda vira um pedido concluído e pago
     x.sales.slice().reverse().forEach(s=>{
@@ -401,6 +444,8 @@ function migrate(x){
         payMethod:'Não informado',installments:total>0?[{id:uid(),due:s.date,value:total,paidAt:s.date,method:'Não informado'}]:[],notes:'',createdAt:s.date});
     });
   }
+  // "Crediário" deixou de ser forma de pagamento (parcelas continuam disponíveis em qualquer forma)
+  d.orders.forEach(o=>{if(o.payMethod==='Crediário')o.payMethod='Outro';(o.installments||[]).forEach(i=>{if(i.method==='Crediário')i.method='Outro'})});
   if(!d.seq)d.seq=d.orders.reduce((m,o)=>Math.max(m,o.number||0),0);
   return d;
 }
@@ -462,8 +507,9 @@ function openModal(id){$(id).classList.add('open')}
 function renderAll(){
   const now=new Date(),wd=now.toLocaleDateString('pt-BR',{weekday:'long'});
   $('todayLbl').innerHTML=`<b>${wd[0].toUpperCase()+wd.slice(1)}</b><br>${now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'})}`;
-  renderInicio();renderOrders();renderProducts();renderGestao();renderCustomers();renderFinance();
-  $('goalValue').value=db.goal||'';
+  renderInicio();renderOrders();renderProducts();renderGestao();renderCustomers();renderFinance();renderPricing();
+  $('homeInsights').innerHTML=insightsHtml(insights().slice(0,3));
+  if(document.activeElement!==$('goalValue'))$('goalValue').value=db.goal?fmtIn(db.goal):'';
 }
 
 /* ---------- início ---------- */
@@ -508,8 +554,8 @@ function addItemRow(it){
   const row=document.createElement('div');row.className='itemrow';
   const pid=it?.productId||(db.products.find(p=>p.qty>0)||db.products[0]).id;
   const p=db.products.find(x=>x.id===pid);
-  row.innerHTML=`<select class="iProd">${productOptions(pid)}${p?'':`<option value="${esc(pid)}" selected>${esc(it.name)} (removida)</option>`}</select><input class="iQty" type="number" inputmode="numeric" min="1" step="1" value="${it?.qty||1}"><input class="iPrice" type="number" inputmode="decimal" min="0" step=".01" value="${it?.price??p?.price??''}"><button class="danger" type="button" title="Remover">✕</button>`;
-  row.querySelector('.iProd').onchange=e=>{const np=db.products.find(x=>x.id===e.target.value);row.querySelector('.iPrice').value=np?.price??'';updateOrderTotals()};
+  row.innerHTML=`<select class="iProd">${productOptions(pid)}${p?'':`<option value="${esc(pid)}" selected>${esc(it.name)} (removida)</option>`}</select><input class="iQty" type="number" inputmode="numeric" min="1" step="1" value="${it?.qty||1}"><input class="iPrice" type="text" inputmode="decimal" autocomplete="off" value="${fmtIn(it?.price??p?.price??'')}"><button class="danger" type="button" title="Remover">✕</button>`;
+  row.querySelector('.iProd').onchange=e=>{const np=db.products.find(x=>x.id===e.target.value);row.querySelector('.iPrice').value=fmtIn(np?.price??'');updateOrderTotals()};
   row.querySelector('.iQty').oninput=row.querySelector('.iPrice').oninput=updateOrderTotals;
   row.querySelector('button').onclick=()=>{row.remove();updateOrderTotals()};
   $('oItems').appendChild(row);
@@ -525,9 +571,7 @@ function readOrderForm(){
   return {items:readItems(),discount:round2($('oDiscount').value),fees:round2($('oFees').value),pack:round2($('oPack').value),ship:round2($('oShip').value),other:round2($('oOther').value)};
 }
 function onMethodChange(){
-  const m=$('oMethod').value;
-  if(m==='Crediário'){$('oPaidFirst').checked=false;if($('oInstN').value==='1')$('oInstN').value='2'}
-  else if(!$('oInstN').disabled&&$('oInstN').value==='1')$('oPaidFirst').checked=true;
+  if(!$('oInstN').disabled&&$('oInstN').value==='1')$('oPaidFirst').checked=true;
   updateOrderTotals();
 }
 function updateOrderTotals(){
@@ -548,7 +592,7 @@ function openOrder(id){
   $('oStatus').innerHTML=STATUSES.map(s=>`<option value="${s.k}">${s.l}</option>`).join('');$('oStatus').value=o?.status||'concluido';
   $('oChannel').innerHTML=opts(CHANNELS,o?.channel||CHANNELS[0]);
   $('oItems').innerHTML='';(o?o.items:[null]).forEach(addItemRow);
-  ['Discount','Fees','Pack','Ship','Other'].forEach(k=>$('o'+k).value=o?.[k.toLowerCase()]||0);
+  ['Discount','Fees','Pack','Ship','Other'].forEach(k=>$('o'+k).value=fmtIn(o?.[k.toLowerCase()]||0));
   const methods=o&&!METHODS.includes(o.payMethod)?[...METHODS,o.payMethod]:METHODS;
   $('oMethod').innerHTML=opts(methods,o?.payMethod||'PIX');
   $('oInstN').innerHTML=Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}x</option>`).join('');
@@ -606,6 +650,18 @@ function setStatus(id,k){
   if(!applyStock(o,{...o,status:k})){viewOrder(id);return}
   o.status=k;persist();toast('Status: '+ST[k].l);
 }
+// próximo passo do pedido; pula "Aguardando pagamento" quando já está tudo pago
+function nextStatus(o){
+  const i=FLOW.indexOf(o.status);if(i<0||i>=FLOW.length-1)return null;
+  let n=FLOW[i+1];
+  if(n==='aguardando_pagamento'&&openSum(o)<0.01)n=FLOW[i+2];
+  return n;
+}
+function advanceOrder(id){
+  const o=db.orders.find(x=>x.id===id),n=o&&nextStatus(o);if(!n)return;
+  if(n==='concluido'&&openSum(o)>=0.01&&!confirm(`Ainda falta receber ${money(openSum(o))} deste pedido. Concluir mesmo assim?`))return;
+  setStatus(id,n);
+}
 function deleteOrder(id){
   const o=db.orders.find(x=>x.id===id);if(!o||!confirm(`Excluir o pedido ${num(o)}? ${isActive(o)?'As peças voltam para o estoque. ':''}Esta ação não pode ser desfeita.`))return;
   applyStock(o,null);db.orders=db.orders.filter(x=>x!==o);closeModal('orderView');persist();toast('Pedido excluído');
@@ -617,6 +673,7 @@ function viewOrder(id){
   <div class="muted">${fmtD(o.date)} · ${esc(o.channel)}</div>
   <div class="row between nowrap" style="margin:12px 0"><div><b>${esc(custName(o))}</b>${c?.phone?`<div class="muted">${esc(c.phone)}</div>`:''}</div>${c?.phone?`<a class="btn secondary sm" target="_blank" rel="noopener" href="${waLink(c.phone,`Olá, ${c.name}!`)}">WhatsApp</a>`:''}</div>
   <label>Status</label><select onchange="setStatus('${o.id}',this.value)">${STATUSES.map(s=>`<option value="${s.k}" ${s.k===o.status?'selected':''}>${s.l}</option>`).join('')}</select>
+  ${nextStatus(o)?`<button style="width:100%;margin-top:10px" onclick="advanceOrder('${o.id}')">Avançar para “${ST[nextStatus(o)].l}” →</button>`:''}
   <h3 style="margin:16px 0 4px">Peças</h3>
   ${o.items.map(i=>`<div class="line"><span>${i.qty}× ${esc(i.name)}</span><span>${money(i.qty*i.price)}</span></div>`).join('')}
   ${o.discount?`<div class="line"><span>Desconto</span><span>- ${money(o.discount)}</span></div>`:''}
@@ -633,7 +690,7 @@ function payInst(oid,iid){
   const o=db.orders.find(x=>x.id===oid),i=o?.installments.find(x=>x.id===iid);if(!i)return;payTarget={oid,iid};
   $('payInfo').textContent=`${num(o)} · ${custName(o)} · ${money(i.value)} (venc. ${fmtD(i.due)})`;
   $('payDate').value=today();
-  $('payMethod').innerHTML=opts(METHODS.filter(m=>m!=='Crediário'),o.payMethod==='Crediário'||!METHODS.includes(o.payMethod)?'PIX':o.payMethod);
+  $('payMethod').innerHTML=opts(METHODS,METHODS.includes(o.payMethod)?o.payMethod:'PIX');
   openModal('payModal');
 }
 function confirmPay(){
@@ -648,23 +705,124 @@ function unpay(oid,iid){
   i.paidAt=null;i.method=o.payMethod;persist();
 }
 
+/* ---------- gestão inteligente ---------- */
+// Regras simples que leem os dados do app e viram alertas/sugestões, do mais urgente para o menos
+function insights(){
+  const t=today(),day=+t.slice(8),m=t.slice(0,7),pm=addMonths(t.slice(0,8)+'01',-1).slice(0,7);
+  const act=db.orders.filter(isActive),insts=allInsts(),out=[];
+  const add=(tone,icon,text)=>out.push({tone,icon,text});
+  const soldIn=f=>sum(act.filter(f),orderTotal);
+  const lastSale={};act.forEach(o=>o.items.forEach(i=>{if(!lastSale[i.productId]||o.date>lastSale[i.productId])lastSale[i.productId]=o.date}));
+  const soldQty=(pid,days)=>sum(act.filter(o=>o.date>=addDays(t,-days)),o=>sum(o.items.filter(i=>i.productId===pid),'qty'));
+
+  // cobranças
+  const late=insts.filter(i=>!i.paidAt&&i.due<t);
+  if(late.length){
+    const by={};late.forEach(i=>{const n=custName(i.o);by[n]=(by[n]||0)+i.value});
+    const top=Object.entries(by).sort((a,b)=>b[1]-a[1])[0];
+    add('bad','⏰',`<b>${money(sum(late,'value'))}</b> em parcelas atrasadas (${Object.keys(by).length} cliente${Object.keys(by).length>1?'s':''}). Maior valor: <b>${esc(top[0])}</b> com ${money(top[1])}. Use “Cobrar” no Início para mandar o lembrete pelo WhatsApp.`);
+  }
+  // pedidos parados no meio do caminho
+  const stuck=act.filter(o=>!['concluido','garantia'].includes(o.status)&&o.date<=addDays(t,-7));
+  if(stuck.length)add('warn','📦',`<b>${stuck.length} pedido${stuck.length>1?'s':''}</b> aberto${stuck.length>1?'s':''} há mais de 7 dias (ex.: ${num(stuck[0])} em “${ST[stuck[0].status].l}”). Abra e use “Avançar” para atualizar o status.`);
+  // reposição: peças que vendem e estão acabando
+  const restock=db.products.filter(p=>p.qty<=p.min&&soldQty(p.id,60)>0).sort((a,b)=>soldQty(b.id,60)-soldQty(a.id,60));
+  if(restock.length)add('warn','🔁',`Repor estoque: ${restock.slice(0,3).map(p=>`<b>${esc(p.name)}</b> (vendeu ${soldQty(p.id,60)} em 60 dias, ${p.qty?`restam ${p.qty}`:'esgotada'})`).join(', ')}${restock.length>3?` e mais ${restock.length-3}`:''}.`);
+  // meta
+  const sold=soldIn(o=>o.date.slice(0,7)===m);
+  if(db.goal>0){
+    const lastDay=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate(),left=lastDay-day+1;
+    if(sold>=db.goal)add('ok','🎉',`Meta do mês batida! Você vendeu ${money(sold)} de ${money(db.goal)}.`);
+    else add('info','🎯',`Faltam <b>${money(db.goal-sold)}</b> para a meta — cerca de <b>${money((db.goal-sold)/left)} por dia</b> nos ${left} dias restantes.`);
+  }
+  // ritmo de vendas x mês passado (mesmo número de dias)
+  const prevSame=soldIn(o=>o.date.slice(0,7)===pm&&+o.date.slice(8)<=day);
+  if(prevSame>0){const d=(sold-prevSame)/prevSame;add(d>=0?'ok':'warn',d>=0?'📈':'📉',`Vendas do mês: <b>${money(sold)}</b>, ${fmtPct(Math.abs(d)*100)} ${d>=0?'acima':'abaixo'} do mesmo período do mês passado (${money(prevSame)}).`)}
+  else if(sold>0)add('info','📈',`Vendas do mês até agora: <b>${money(sold)}</b>.`);
+  // caixa dos próximos 30 dias
+  const in30=sum(insts.filter(i=>!i.paidAt&&i.due>=t&&i.due<=addDays(t,30)),'value'),out30=sum(db.expenses.filter(e=>!e.paid&&e.date<=addDays(t,30)),'value');
+  if(out30>in30)add('bad','💸',`Atenção ao caixa: nos próximos 30 dias há <b>${money(out30)}</b> em despesas a pagar e só ${money(in30)} a receber.`);
+  else if(in30>0)add('info','💰',`Nos próximos 30 dias você tem <b>${money(in30)}</b> a receber${out30?` e ${money(out30)} em despesas a pagar`:''}.`);
+  // margens
+  const ranked=db.products.filter(p=>productMargin(p)!=null).sort((a,b)=>productMargin(b)-productMargin(a));
+  const lowM=ranked.filter(p=>productMargin(p)<0.2);
+  if(lowM.length)add('warn','🏷️',`${lowM.length} peça${lowM.length>1?'s':''} com margem abaixo de 20%: ${lowM.slice(0,3).map(p=>`<b>${esc(p.name)}</b> (${fmtPct(productMargin(p)*100)})`).join(', ')}. Veja o preço sugerido ao editar a peça.`);
+  if(ranked.length)add('ok','🏆',`Maior margem: <b>${esc(ranked[0].name)}</b> (${fmtPct(productMargin(ranked[0])*100)}). Vale destacar essa peça na divulgação.`);
+  // peças paradas
+  const idle=db.products.filter(p=>p.qty>0&&(!lastSale[p.id]||lastSale[p.id]<addDays(t,-90))&&!(p.createdAt&&p.createdAt>addDays(t,-90)));
+  if(idle.length)add('info','🧊',`${idle.length} peça${idle.length>1?'s':''} sem venda há mais de 90 dias (${money(sum(idle,p=>p.cost*p.qty))} parados em estoque): ${idle.slice(0,3).map(p=>`<b>${esc(p.name)}</b>`).join(', ')}. Que tal um kit ou promoção?`);
+  // mais vendida
+  const top30={};act.filter(o=>o.date>=addDays(t,-30)).forEach(o=>o.items.forEach(i=>top30[i.name]=(top30[i.name]||0)+i.qty));
+  const best=Object.entries(top30).sort((a,b)=>b[1]-a[1])[0];
+  if(best)add('ok','⭐',`Mais vendida nos últimos 30 dias: <b>${esc(best[0])}</b> (${best[1]} un.).`);
+  // ticket médio
+  const mo=act.filter(o=>o.date.slice(0,7)===m);
+  if(mo.length)add('info','🧾',`Ticket médio do mês: <b>${money(sold/mo.length)}</b> por pedido (${mo.length} pedido${mo.length>1?'s':''}).`);
+  // clientes para reativar
+  const lastBuy={};act.forEach(o=>{if(o.customerId&&(!lastBuy[o.customerId]||o.date>lastBuy[o.customerId]))lastBuy[o.customerId]=o.date});
+  const sleepy=db.customers.filter(c=>lastBuy[c.id]&&lastBuy[c.id]<addDays(t,-60));
+  if(sleepy.length)add('info','💌',`${sleepy.length} cliente${sleepy.length>1?'s':''} sem comprar há mais de 60 dias: ${sleepy.slice(0,3).map(c=>`<b>${esc(c.name)}</b>`).join(', ')}. Mande as novidades pelo WhatsApp.`);
+  if(!out.length)add('info','🌱','Cadastre peças e pedidos para receber análises e sugestões automáticas aqui.');
+  const rank={bad:0,warn:1,ok:2,info:3};
+  return out.map((x,i)=>({...x,i})).sort((a,b)=>rank[a.tone]-rank[b.tone]||a.i-b.i);
+}
+const insightsHtml=list=>`<div class="ins-list">${list.map(x=>`<div class="ins ${x.tone}"><span class="ico">${x.icon}</span><div>${x.text}</div></div>`).join('')}</div>`;
+
+/* ---------- precificação ---------- */
+// custo real de uma peça: custo de compra + embalagem + outros + tempo de preparo × valor da hora
+function unitCost(p){const pr=db.pricing;return (p.cost||0)+(p.pack||0)+(p.extra||0)+(p.prepMin||0)/60*(pr.hourly||0)}
+// fração do preço que vai para imposto e taxa do cartão
+const feeRate=()=>((db.pricing.tax||0)+(db.pricing.card||0))/100;
+// margem de lucro sobre o preço de venda (0,35 = 35%)
+function productMargin(p){if(!(p.price>0))return null;return (p.price*(1-feeRate())-unitCost(p))/p.price}
+function suggestedPrice(p,marginPct){const d=1-feeRate()-(marginPct||0)/100;return d>0?round2(unitCost(p)/d):null}
+function readProductForm(){
+  return {cost:toNum($('pCost').value)||0,price:toNum($('pPrice').value)||0,prepMin:toNum($('pPrep').value)||0,pack:toNum($('pPack').value)||0,extra:toNum($('pExtra').value)||0,margin:toNum($('pMargin').value)};
+}
+function updatePriceCalc(){
+  const f=readProductForm(),pr=db.pricing,uc=unitCost(f),m=isNaN(f.margin)?pr.margin:f.margin,sug=suggestedPrice(f,m);
+  const cur=productMargin(f),prep=(f.prepMin||0)/60*(pr.hourly||0);
+  $('pCalc').innerHTML=`<div class="line"><span>Custo da peça</span><span>${money(f.cost)}</span></div>
+  ${f.pack?`<div class="line"><span>Embalagem</span><span>${money(f.pack)}</span></div>`:''}
+  ${f.extra?`<div class="line"><span>Outros custos</span><span>${money(f.extra)}</span></div>`:''}
+  ${f.prepMin?`<div class="line"><span>Tempo de preparo (${fmtPct(f.prepMin).replace('%','')} min)</span><span>${pr.hourly?money(prep):'<span class="muted">defina sua hora</span>'}</span></div>`:''}
+  <div class="line"><b>Custo total</b><b>${money(uc)}</b></div>
+  <div class="line"><span>Imposto + taxa do cartão</span><span>${fmtPct((pr.tax||0)+(pr.card||0))} do preço</span></div>
+  <div class="line"><span>Margem desejada</span><span>${fmtPct(m)} do preço</span></div>
+  <div class="line total"><b>Preço sugerido</b><b>${sug?money(sug):'—'}</b></div>
+  ${sug?`<button class="secondary" type="button" style="width:100%;margin-top:6px" onclick="$('pPrice').value=fmtIn(${sug});updatePriceCalc()">Usar ${money(sug)} como preço</button>`:'<div class="muted neg">Imposto + taxa + margem passam de 100%. Reduza a margem.</div>'}
+  ${cur!=null?`<div class="muted" style="margin-top:8px">Com o preço atual (${money(f.price)}) a margem é <b class="${cur<0.2?'neg':''}">${fmtPct(cur*100)}</b> — lucro de ${money(f.price*(1-feeRate())-uc)} por peça.</div>`:''}`;
+}
+
 /* ---------- estoque ---------- */
 function renderProducts(){
   const q=($('productSearch').value||'').toLowerCase();
   const list=db.products.filter(p=>(p.name+' '+p.sku+' '+p.category).toLowerCase().includes(q));
-  $('productRows').innerHTML=list.length?list.map(p=>`<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.sku)}</span></td><td>${esc(p.category)}</td><td><span class="pill ${p.qty<=p.min?'low':''}">${p.qty}</span></td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td><div class="actions"><button class="secondary" onclick="openProduct('${p.id}')">Editar</button><button class="danger" onclick="deleteProduct('${p.id}')">Excluir</button></div></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Cadastre sua primeira peça para começar.</td></tr>';
+  const pcs=sum(db.products,p=>Number(p.qty)),costV=sum(db.products,p=>p.cost*p.qty),saleV=sum(db.products,p=>p.price*p.qty);
+  const ranked=db.products.filter(p=>productMargin(p)!=null).sort((a,b)=>productMargin(b)-productMargin(a)),best=ranked[0],worst=ranked[ranked.length-1];
+  $('stockSummary').innerHTML=`<div class="grid">
+    <div class="card kpi hero"><small>Valor de venda do estoque</small><strong>${money(saleV)}</strong></div>
+    <div class="card kpi" style="--k:var(--c-cost)"><small>Valor de custo</small><strong>${money(costV)}</strong></div>
+    <div class="card kpi" style="--k:var(--c-rec)"><small>Lucro potencial</small><strong>${money(sum(db.products,p=>(p.price*(1-feeRate())-unitCost(p))*p.qty))}</strong></div>
+    <div class="card kpi" style="--k:var(--c-due)"><small>Peças em estoque</small><strong>${pcs}</strong></div></div>
+    ${best?`<div class="card"><div class="row between nowrap"><div><div class="muted">🏆 Maior margem</div><b>${esc(best.name)}</b></div><span class="pill ok">${fmtPct(productMargin(best)*100)}</span></div>
+    ${worst&&worst!==best?`<div class="row between nowrap" style="margin-top:10px"><div><div class="muted">Menor margem</div><b>${esc(worst.name)}</b></div><span class="pill ${productMargin(worst)<0.2?'bad':'warn'}">${fmtPct(productMargin(worst)*100)}</span></div>`:''}</div>`:''}`;
+  $('productRows').innerHTML=list.length?list.map(p=>{const m=productMargin(p);return `<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.sku)}</span></td><td>${esc(p.category)}</td><td><span class="pill ${p.qty<=p.min?'low':''}">${p.qty}</span></td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${m==null?'—':`<span class="pill ${m<0.2?'bad':m<0.4?'warn':'ok'}">${fmtPct(m*100)}</span>`}</td><td><div class="actions"><button class="secondary" onclick="openProduct('${p.id}')">Editar</button><button class="danger" onclick="deleteProduct('${p.id}')">Excluir</button></div></td></tr>`}).join(''):'<tr><td colspan="7" class="empty">Cadastre sua primeira peça para começar.</td></tr>';
 }
 function openProduct(id){
-  const p=id?db.products.find(x=>x.id===id):null;
+  const p=id?db.products.find(x=>x.id===id):null,pr=db.pricing;
   $('pId').value=p?.id||'';$('productTitle').textContent=p?'Editar peça':'Nova peça';
-  $('pName').value=p?.name||'';$('pSku').value=p?.sku||'';$('pCategory').value=p?.category||'Colar';$('pQty').value=p?.qty??1;$('pCost').value=p?.cost??'';$('pPrice').value=p?.price??'';$('pMin').value=p?.min??2;
-  $('pBuy').checked=!p;openModal('productModal');
+  $('pName').value=p?.name||'';$('pSku').value=p?.sku||'';$('pCategory').value=p?.category||'Colar';$('pQty').value=p?.qty??1;$('pCost').value=fmtIn(p?.cost??'');$('pPrice').value=fmtIn(p?.price??'');$('pMin').value=p?.min??2;
+  $('pPrep').value=p?.prepMin||'';$('pPack').value=fmtIn(p?p.pack||0:pr.pack||0);$('pExtra').value=fmtIn(p?.extra||0);$('pMargin').value=String(p?.margin??pr.margin).replace('.',',');
+  $('pPricingInfo').textContent=`Imposto ${fmtPct(pr.tax)} · taxa do cartão ${fmtPct(pr.card)} · sua hora ${money(pr.hourly)} — ajuste em ⚙ Configurações.`;
+  $('pBuy').checked=!p;updatePriceCalc();openModal('productModal');
 }
 function saveProduct(){
-  const name=$('pName').value.trim(),cost=Number($('pCost').value),price=Number($('pPrice').value),qty=Math.floor(Number($('pQty').value));
-  if(!name||$('pCost').value===''||$('pPrice').value===''||!(qty>=0)){alert('Preencha nome, quantidade, custo e preço corretamente.');return}
-  const old=db.products.find(x=>x.id===$('pId').value);
-  const p={id:old?.id||uid(),name,sku:$('pSku').value.trim(),category:$('pCategory').value,qty,cost,price,min:Number($('pMin').value)||0};
+  const name=$('pName').value.trim(),cost=round2($('pCost').value),price=round2($('pPrice').value),qty=Math.floor(Number($('pQty').value));
+  if(!name||!numOk($('pCost').value)||!numOk($('pPrice').value)||!(qty>=0)){alert('Preencha nome, quantidade, custo e preço corretamente.');return}
+  const old=db.products.find(x=>x.id===$('pId').value),f=readProductForm();
+  const p={id:old?.id||uid(),name,sku:$('pSku').value.trim(),category:$('pCategory').value,qty,cost,price,min:Number($('pMin').value)||0,
+    prepMin:f.prepMin,pack:round2(f.pack),extra:round2(f.extra),margin:isNaN(f.margin)?db.pricing.margin:f.margin,createdAt:old?old.createdAt:today()};
   const added=qty-(old?.qty||0);
   if($('pBuy').checked&&added>0&&cost>0)db.expenses.unshift({id:uid(),desc:`Compra de estoque: ${name} (${added} un.)`,category:'Compra de estoque',value:round2(added*cost),date:today(),paid:true,paidAt:today()});
   if(old)db.products[db.products.indexOf(old)]=p;else db.products.push(p);
@@ -717,22 +875,32 @@ function renderFinance(){
   const t=today();
   $('expenseRows').innerHTML=db.expenses.length?db.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<tr><td>${fmtD(e.date)}</td><td>${esc(e.desc)}<br><span class="muted">${esc(e.category)}</span></td><td>${money(e.value)}</td><td>${e.paid?'<span class="pill ok">Paga</span>':e.date<t?'<span class="pill bad">Vencida</span>':'<span class="pill warn">A pagar</span>'}</td><td><div class="actions">${e.paid?'':`<button onclick="payExpense('${e.id}')">Pagar</button>`}<button class="danger" onclick="removeExpense('${e.id}')">Excluir</button></div></td></tr>`).join(''):'<tr><td colspan="5" class="empty">Nenhuma despesa lançada.</td></tr>';
   if(!$('dasMonth').value)$('dasMonth').value=t.slice(0,7);
-  if(document.activeElement!==$('dasValue'))$('dasValue').value=db.das[$('dasMonth').value]??'';
+  if(document.activeElement!==$('dasValue'))$('dasValue').value=fmtIn(db.das[$('dasMonth').value]??'');
   const das=Object.entries(db.das).sort((a,b)=>b[0].localeCompare(a[0]));
   $('dasList').innerHTML=das.slice(0,12).map(([k,v])=>`<div class="line"><span>${parseD(k+'-01').toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</span><span class="row nowrap" style="gap:8px">${money(v)}<button class="danger sm" onclick="removeDas('${k}')">✕</button></span></div>`).join('');
 }
 function openExpense(){$('eDesc').value='';$('eValue').value='';$('eDate').value=today();$('eCat').innerHTML=opts(EXP_CATS,'Outros');$('ePaid').checked=true;openModal('expenseModal')}
 function saveExpense(){
-  if(!$('eDesc').value.trim()||!(Number($('eValue').value)>0)){alert('Informe descrição e valor.');return}
+  if(!$('eDesc').value.trim()||!(toNum($('eValue').value)>0)){alert('Informe descrição e valor.');return}
   const date=$('eDate').value||today(),paid=$('ePaid').checked;
   db.expenses.unshift({id:uid(),desc:$('eDesc').value.trim(),category:$('eCat').value,value:round2($('eValue').value),date,paid,paidAt:paid?date:null});
   closeModal('expenseModal');persist();toast('Despesa salva');
 }
 function payExpense(id){const e=db.expenses.find(x=>x.id===id);if(e){e.paid=true;e.paidAt=today();persist();toast('Despesa paga')}}
 function removeExpense(id){if(confirm('Excluir esta despesa?')){db.expenses=db.expenses.filter(e=>e.id!==id);persist()}}
-function saveDas(){const m=$('dasMonth').value,v=Number($('dasValue').value);if(!m||!(v>=0)||$('dasValue').value===''){alert('Informe mês e valor do DAS.');return}db.das[m]=v;persist();toast('DAS salvo')}
+function saveDas(){const m=$('dasMonth').value,v=round2($('dasValue').value);if(!m||!numOk($('dasValue').value)||v<0){alert('Informe mês e valor do DAS.');return}db.das[m]=v;persist();toast('DAS salvo')}
 function removeDas(k){if(confirm('Remover este DAS?')){delete db.das[k];persist()}}
-function saveGoal(){db.goal=Number($('goalValue').value)||0;persist();toast('Meta salva')}
+function renderPricing(){
+  const pr=db.pricing,pct=v=>String(v||0).replace('.',',');
+  if(document.activeElement?.id?.startsWith('pr'))return;
+  $('prTax').value=pct(pr.tax);$('prCard').value=pct(pr.card);$('prHourly').value=fmtIn(pr.hourly||0);$('prMargin').value=pct(pr.margin);$('prPack').value=fmtIn(pr.pack||0);
+}
+function savePricing(){
+  const v={tax:toNum($('prTax').value)||0,card:toNum($('prCard').value)||0,hourly:round2($('prHourly').value)||0,margin:toNum($('prMargin').value)||0,pack:round2($('prPack').value)||0};
+  if([v.tax,v.card,v.margin].some(x=>x<0)||v.tax+v.card+v.margin>=100){alert('Imposto + taxa + margem precisam somar menos de 100%.');return}
+  db.pricing=v;persist();toast('Precificação salva');
+}
+function saveGoal(){db.goal=round2($('goalValue').value)||0;persist();toast('Meta salva')}
 
 /* ---------- gestão ---------- */
 let topMode='valor';
@@ -782,6 +950,8 @@ function renderGestao(){
   const costs=paidCosts().filter(c=>inR(c.date)),costSum=sum(costs,'value'),res=recSum-costSum;
   const recM=byMonth(rec,'paidAt'),costM=byMonth(costs,'date');
   const cards=[];
+  cards.push(gcard('✨ Gestão inteligente','Alertas e sugestões a partir dos seus dados','Análises automáticas sobre a situação de hoje: ritmo de vendas, meta, cobranças, reposição, peças paradas, margens, clientes para reativar e caixa. Não dependem do período escolhido acima.',
+    insightsHtml(insights())));
 
   const costCats={};costs.forEach(c=>costCats[c.cat]=(costCats[c.cat]||0)+c.value);
   cards.push(gcard('Receita x Custo','','Recebido: tudo o que entrou de fato no período (parcelas e pagamentos recebidos). Custos pagos: despesas pagas, compras de estoque lançadas, custos de venda dos pedidos e DAS. Resultado = recebido − custos pagos.',
@@ -857,7 +1027,9 @@ function importData(e){
   r.readAsText(f);
 }
 
-$('dasMonth').addEventListener('change',()=>{$('dasValue').value=db.das[$('dasMonth').value]??''});
+$('dasMonth').addEventListener('change',()=>{$('dasValue').value=fmtIn(db.das[$('dasMonth').value]??'')});
+// ao sair de um campo de valor, mostra com 2 casas decimais (ex.: 13,38)
+document.addEventListener('focusout',e=>{const el=e.target;if(el.matches?.('input[inputmode=decimal]:not([data-pct])')&&numOk(el.value))el.value=fmtIn(toNum(el.value))});
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 /* ---------- tela, zoom e aparência ---------- */
 // medidas da tela em Configurações, para diagnóstico
@@ -878,7 +1050,7 @@ function setTheme(v){
 setTheme(document.documentElement.dataset.theme||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.02-7';
+const APP_VERSION='2026.11.03-1';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
