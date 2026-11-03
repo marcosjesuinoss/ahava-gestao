@@ -878,7 +878,7 @@ function setTheme(v){
 setTheme(document.documentElement.dataset.theme||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.02-6';
+const APP_VERSION='2026.11.02-7';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
@@ -889,12 +889,17 @@ async function updateApp(){
     if(reg)await reg.update();
     if(window.caches)await Promise.all((await caches.keys()).map(k=>caches.delete(k)));
   }catch(e){}
-  try{sessionStorage.setItem('ahava_upd','1')}catch(e){}
+  // guarda a tela atual para voltar nela depois de recarregar
+  try{sessionStorage.setItem('ahava_upd',JSON.stringify({tab:document.querySelector('.section.active')?.id||'inicio',lastTab}))}catch(e){}
   location.reload();
 }
-let justUpdated=false;
-try{justUpdated=!!sessionStorage.getItem('ahava_upd');sessionStorage.removeItem('ahava_upd')}catch(e){}
-if(justUpdated)setTimeout(()=>toast('App atualizado ✓ versão '+APP_VERSION),300);
+let justUpdated=null;
+try{justUpdated=JSON.parse(sessionStorage.getItem('ahava_upd')||'null');sessionStorage.removeItem('ahava_upd')}catch(e){}
+if(justUpdated){
+  if(justUpdated.lastTab)go(justUpdated.lastTab);
+  if(justUpdated.tab&&$(justUpdated.tab))go(justUpdated.tab);
+  setTimeout(()=>toast('App atualizado ✓ versão '+APP_VERSION),300);
+}
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   const hadController=!!navigator.serviceWorker.controller&&!justUpdated;
   navigator.serviceWorker.register('./sw.js').then(reg=>{
