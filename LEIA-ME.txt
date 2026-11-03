@@ -1,24 +1,51 @@
 AHAVA • PWA de gestão de semijoias
 
+ENDEREÇO
+https://marcosjesuinoss.github.io/ahava-gestao/
+
 CONTEÚDO
 - index.html: aplicativo
 - manifest.webmanifest: configuração PWA
 - sw.js: cache/offline
 - icon.svg: ícone
 
-COMO PUBLICAR PARA INSTALAR NO IPHONE
-1. Publique todos os arquivos desta pasta em uma hospedagem HTTPS (por exemplo, GitHub Pages, Netlify ou Vercel).
-2. Abra o endereço publicado no Safari do iPhone.
-3. Toque em Compartilhar > Adicionar à Tela de Início.
-4. Abra o ícone AHAVA na tela inicial.
+O QUE O APP FAZ
+- Início: vendido e recebido no mês, a receber, em atraso, meta do mês,
+  parcelas para receber/cobrar, pedidos em aberto e estoque baixo.
+- Pedidos: várias peças por pedido, cliente, canal, desconto, custos da venda
+  e 9 status (Pendente, Aguardando aprovação, Aprovado, Em andamento,
+  Aguardando pagamento, Enviado, Concluído, Garantia, Cancelado).
+  Visão "Todos os pedidos" e "Pedidos por status".
+- Pagamento: à vista ou parcelado (até 12x) com vencimentos; registrar
+  recebimento (data e meio: PIX, dinheiro, cartão…), estornar e cobrar pelo WhatsApp.
+- Estoque: as peças são reservadas ao criar o pedido e voltam ao estoque
+  se o pedido for cancelado ou excluído. Ao cadastrar/repor peças, a compra
+  pode ser lançada como custo pago.
+- Gestão (com filtro de período): Receita x Custo, Recebido x Custos pagos por mês,
+  Resultado por mês, Recebidos x Meios de pagamento, Recebido x Em atraso,
+  Valores a receber x Custos previstos, Top 5 clientes, Peças mais vendidas
+  e Clientes novos.
+- Mais: clientes, despesas (pagas ou a pagar), DAS, backup e meta.
+
+COMO INSTALAR NO IPHONE
+1. Abra o endereço acima no Safari do iPhone.
+2. Toque em Compartilhar > Adicionar à Tela de Início.
+3. Abra o ícone AHAVA na tela inicial.
+
+COMO ATUALIZAR
+- Altere os arquivos e envie para o GitHub (git add, commit, push).
+- Ao mudar o app, troque o nome do cache em sw.js (ex.: ahava-gestao-v2 -> v3).
 
 DADOS E PRIVACIDADE
 - Os dados são gravados localmente no navegador/aparelho (localStorage).
 - Não há conta, sincronização na nuvem ou envio dos dados para servidor.
-- Use a aba Backup e ajustes > Baixar backup com frequência.
+- Use Mais > Backup > Baixar backup com frequência.
 - Para trocar de aparelho, restaure o arquivo JSON de backup.
+- Backups da versão anterior (só "vendas") são convertidos automaticamente:
+  cada venda vira um pedido concluído e pago.
 
 OBSERVAÇÕES
-- O lucro é estimado com base nos custos informados.
-- O DAS é registrado manualmente e não é calculado por venda.
+- "Resultado" na Gestão = dinheiro recebido − custos pagos no período.
+- O lucro por pedido é estimado com base nos custos informados.
+- O DAS é registrado manualmente e entra como custo no dia 20 do mês de referência.
 - Esta ferramenta é gerencial e não substitui obrigações fiscais/contábeis.
