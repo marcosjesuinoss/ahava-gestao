@@ -17,7 +17,7 @@
     /* Cores neutras (claro) + cor do tema Sálvia */
     :root{--ink:#2f3430;--muted:#8b867b;--bg:#f8f6f1;--card:#fff;--field:#fffdf9;--line:#ece7dd;--soft:#f3efe7;--gold:#a8834a;--goldsoft:#f5eddf;--sec-ink:#7a6249;
       --tab-bg:rgba(255,255,255,.92);--red:#b34d43;--redsoft:#f9ebe8;--warn:#c08431;--warnsoft:#f8efdf;--info:#4f7cae;--infosoft:#e8eff7;--ok:#4f9a4f;--oksoft:#e7f2e5;
-      --c-rec:#6aae68;--c-cost:#a27fcb;--c-due:#d8a648;--c-late:#d36457;--shadow:0 6px 22px rgba(90,74,40,.07);
+      --c-rec:#6aae68;--c-cost:#cd6f60;--c-due:#d8a648;--c-late:#d36457;--shadow:0 6px 22px rgba(90,74,40,.07);
       --brand:#5a7458;--brand-grad:linear-gradient(135deg,#86a082 0%,#5a7458 100%);--accent:#4d654c;--soft2:#e9efe5;--bg-grad:linear-gradient(180deg,#eef2ea 0,#f8f6f1 360px);
       --head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.4),transparent 55%),linear-gradient(125deg,#5b7459 0%,#829a7e 50%,#b8a17a 100%);--shadow-btn:0 6px 16px rgba(90,116,88,.28)}
     /* Cor do tema Rosé (claro) */
@@ -515,7 +515,7 @@ const METHODS=['PIX','Dinheiro','Cartão de crédito','Cartão de débito','Outr
 const FLOW=['pendente','aguardando_aprovacao','aprovado','em_andamento','aguardando_pagamento','enviado','concluido'];
 const CHANNELS=['Instagram/WhatsApp','Mercado Livre','Presencial','Outro'];
 const EXP_CATS=['Compra de estoque','Embalagem','Frete','Marketing','Taxas','Outros'];
-const PALETTE=['#5aa95a','#4bb3c4','#9a6cc6','#d9a23a','#d0574c','#4f7cae','#8a948a'];
+const PALETTE=['#5aa95a','#4bb3c4','#d9a23a','#8f7a5e','#d0574c','#4f7cae','#8a948a'];
 const RANK=['#5aa95a','#4ba3d4','#c4a52c','#9aa0a6','#9aa0a6'];
 
 const pad=n=>String(n).padStart(2,'0');
@@ -1502,7 +1502,7 @@ function setAccent(v){
 setAccent(document.documentElement.dataset.accent||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.04-2';
+const APP_VERSION='2026.11.04-3';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
