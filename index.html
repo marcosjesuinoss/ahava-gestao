@@ -97,6 +97,7 @@
     .ins .ico{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;background:var(--soft);font-size:16px}
     .ins.bad .ico{background:var(--redsoft)}.ins.warn .ico{background:var(--warnsoft)}.ins.ok .ico{background:var(--oksoft)}.ins.info .ico{background:var(--infosoft)}
     details.card summary{list-style:none}
+    .demobar{background:var(--infosoft);color:var(--info)}
     .qa{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.qa button{width:100%;padding:14px 10px}
     .smart{cursor:pointer;background:linear-gradient(135deg,var(--card) 40%,var(--goldsoft));transition:transform .15s}.smart:active{transform:scale(.98)}
     .smart .chev{font-size:26px;color:var(--gold);line-height:1}
@@ -127,6 +128,7 @@
 <body>
 <header><div class="head"><div><div class="brand">AHAVA</div><div class="sub">Semijoias · Gestão</div></div><div class="row nowrap" style="gap:12px"><div class="hdate" id="todayLbl"></div><button class="hbtn" onclick="go('config')" aria-label="Configurações" title="Configurações"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div></div></header>
 <div class="updbar" id="updBar" hidden>Nova versão disponível <button class="sm" onclick="updateApp()">Atualizar agora</button></div>
+<div class="updbar demobar" id="demoBar" hidden>🧪 Modo teste · dados de exemplo <button class="sm" onclick="exitDemo()">Sair do teste</button></div>
 <main>
   <!-- INÍCIO -->
   <section id="inicio" class="section active">
@@ -269,6 +271,16 @@
         <button onclick="exportData()">Baixar backup</button>
         <label class="btn secondary" style="margin:0;font-size:15px">Restaurar backup<input type="file" accept="application/json,.json" id="importFile" style="display:none" onchange="importData(event)"></label>
       </div>
+    </div>
+    <div class="card">
+      <h3>🛡️ Cópias automáticas</h3>
+      <p class="muted">Todo dia em que o app é aberto, ele guarda uma cópia dos seus dados reais neste aparelho, mantendo as dos últimos 3 dias. Atualizações do app nunca apagam seus dados; estas cópias são uma proteção extra.</p>
+      <div id="snapList"></div>
+    </div>
+    <div class="card">
+      <h3>🧪 Modo teste</h3>
+      <p class="muted">Abre o app com dados de exemplo (peças, clientes, pedidos e despesas) para você explorar à vontade. Seus dados reais ficam guardados à parte e <b>não são alterados</b>. O que você fizer no modo teste fica só nele.</p>
+      <div id="demoCtl"></div>
     </div>
     <div class="notice">Para instalar no iPhone: abra o endereço no Safari, toque em Compartilhar e escolha “Adicionar à Tela de Início”.</div>
   </section>
@@ -447,7 +459,8 @@ const opts=(list,sel)=>list.map(v=>`<option ${v===sel?'selected':''}>${esc(v)}</
 /* ---------- dados ---------- */
 function migrate(x){
   x=x||{};
-  const d={version:2,products:x.products||[],customers:x.customers||[],orders:x.orders||[],das:x.das||{},goal:x.goal||0,seq:x.seq||0,
+  // ...x mantém qualquer campo que esta versão não conheça (nada salvo é descartado)
+  const d={...x,version:2,products:x.products||[],customers:x.customers||[],orders:x.orders||[],das:x.das||{},goal:x.goal||0,seq:x.seq||0,
     pricing:{tax:0,card:0,hourly:0,margin:50,pack:0,...(x.pricing||{})},
     expenses:(x.expenses||[]).map(e=>({...e,category:e.category||'Outros',paid:e.paid!==false,paidAt:e.paid===false?null:(e.paidAt||e.date)}))};
   if(!x.version&&x.sales){ // versão 1: cada venda vira um pedido concluído e pago
@@ -461,13 +474,78 @@ function migrate(x){
   }
   // "Crediário" deixou de ser forma de pagamento (parcelas continuam disponíveis em qualquer forma)
   d.orders.forEach(o=>{if(o.payMethod==='Crediário')o.payMethod='Outro';(o.installments||[]).forEach(i=>{if(i.method==='Crediário')i.method='Outro'})});
+  if(!x.version&&x.sales)delete d.sales; // já convertidas em pedidos acima
   if(!d.seq)d.seq=d.orders.reduce((m,o)=>Math.max(m,o.number||0),0);
   return d;
 }
-let db;
-try{db=migrate(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(e){db=migrate(null)}
+
+// Dados de exemplo para o modo teste (sempre os mesmos, com datas relativas a hoje). Clientes sem telefone para não abrir conversa com ninguém de verdade.
+function makeDemo(){
+  let s=20261103;const rnd=()=>{s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  const pick=a=>a[Math.floor(rnd()*a.length)],t=today();
+  const P=[['Colar ponto de luz','Colar',18,59.9,8,2],['Brinco argola média','Brinco',9,34.9,12,3],['Anel solitário','Anel',15,45.9,7,2],['Colar choker elos','Colar',22,69.9,5,2],['Brinco gota zircônia','Brinco',14,49.9,6,2],
+    ['Pulseira riviera','Pulseira',28,89.9,4,1],['Conjunto coração','Conjunto',32,119.9,1,1],['Brinco ear cuff','Brinco',11,39.9,1,3],['Pulseira berloques','Pulseira',19,64.9,3,1],['Anel aparador','Anel',8,29.9,0,2],['Terço banhado','Terço',16,54.9,5,1],['Tornozeleira estrelas','Outro',10,32,6,1]];
+  const products=P.map(([name,category,cost,price,qty,min],i)=>({id:'demo-p'+i,name,sku:category.slice(0,3).toUpperCase()+String(i+1).padStart(3,'0'),category,cost,price,qty,min,prepMin:10,pack:1.5,extra:0,margin:50,createdAt:addDays(t,-300)}));
+  const names=['Ana Paula (exemplo)','Beatriz (exemplo)','Carla (exemplo)','Daniela (exemplo)','Eduarda (exemplo)','Fabiana (exemplo)','Gabriela (exemplo)','Helena (exemplo)','Isabela (exemplo)','Joana (exemplo)'];
+  const customers=names.map((name,i)=>({id:'demo-c'+i,name,phone:'',insta:'',city:'',notes:'Cliente de exemplo do modo teste',createdAt:addDays(t,-290+i*25)}));
+  const sellable=products.filter(p=>p.category!=='Outro'),orders=[],openSt=['pendente','aguardando_aprovacao','aprovado','em_andamento','aguardando_pagamento','enviado','concluido'];
+  let seq=0;
+  for(let back=290;back>=0;back-=1+Math.floor(rnd()*6)){
+    const date=addDays(t,-back),items=[];
+    const n=rnd()<0.6?1:rnd()<0.7?2:3;
+    for(let k=0;k<n;k++){const p=pick(rnd()<0.65?sellable.slice(0,4):sellable);if(!items.some(i=>i.productId===p.id))items.push({productId:p.id,name:p.name,qty:rnd()<0.85?1:2,price:p.price,cost:p.cost})}
+    const total=round2(sum(items,i=>i.qty*i.price));
+    const status=back>14?(rnd()<0.05?'cancelado':rnd()<0.04?'garantia':'concluido'):pick(openSt);
+    const method=rnd()<0.7?'PIX':rnd()<0.5?'Dinheiro':pick(['Cartão de crédito','Cartão de débito']);
+    const nInst=total>90&&rnd()<0.45?(rnd()<0.5?2:3):1,unpaidStart=['pendente','aguardando_aprovacao','aguardando_pagamento'].includes(status);
+    const installments=splitValue(total,nInst).map((value,i)=>{const due=addMonths(date,i);let paidAt=null;
+      if(i===0)paidAt=unpaidStart?null:date;else if(due<=t&&rnd()<0.8)paidAt=due;
+      return {id:'demo-i'+seq+'-'+i,due,value,paidAt,method}});
+    seq++;
+    orders.push({id:'demo-o'+seq,number:seq,customerId:rnd()<0.8?pick(rnd()<0.5?customers.slice(0,4):customers).id:'',date,status,
+      channel:rnd()<0.6?'Instagram/WhatsApp':rnd()<0.6?'Presencial':pick(['Mercado Livre','Outro']),items,discount:0,
+      fees:method.startsWith('Cartão')?round2(total*0.0499):0,pack:1.5,ship:rnd()<0.3?round2(8+rnd()*12):0,other:0,payMethod:method,installments,notes:'',createdAt:date});
+  }
+  const expenses=[],das={},m0=t.slice(0,8)+'05';
+  for(let m=0;m<10;m++){
+    const d=addMonths(m0,-m);
+    if(d<=t){
+      expenses.push({id:'demo-e'+m+'a',desc:'Embalagens e saquinhos',category:'Embalagem',value:round2(35+rnd()*25),date:d,paid:true,paidAt:d});
+      if(m%2===0)expenses.push({id:'demo-e'+m+'b',desc:'Reposição com fornecedor',category:'Compra de estoque',value:round2(350+rnd()*300),date:addDays(d,3),paid:true,paidAt:addDays(d,3)});
+      if(m%3===1)expenses.push({id:'demo-e'+m+'c',desc:'Anúncio no Instagram',category:'Marketing',value:50,date:addDays(d,8),paid:true,paidAt:addDays(d,8)});
+    }
+    if(m>0)das[d.slice(0,7)]=81.05;
+  }
+  expenses.push({id:'demo-e-f1',desc:'Reposição com fornecedor (a pagar)',category:'Compra de estoque',value:420,date:addDays(t,10),paid:false,paidAt:null});
+  expenses.push({id:'demo-e-f2',desc:'Anúncio no Instagram (a pagar)',category:'Marketing',value:80,date:addDays(t,20),paid:false,paidAt:null});
+  return migrate({version:2,demo:true,products,customers,orders,expenses,das,goal:3000,seq,pricing:{tax:0,card:4.99,hourly:20,margin:50,pack:1.5}});
+}
+/* Segurança dos dados:
+   - os dados reais ficam SEMPRE em KEY; o modo teste usa outra chave (DEMO_KEY) e nunca grava em KEY
+   - antes de abrir, o app guarda 1 cópia por dia dos dados reais (últimos 3 dias)
+   - se os dados salvos estiverem ilegíveis, o original é guardado à parte em vez de ser sobrescrito */
+const DEMO_KEY='ahava_demo_v1',DEMO_FLAG='ahava_demo_on',SNAP_KEY='ahava_snapshots';
+let demo=false;try{demo=localStorage.getItem(DEMO_FLAG)==='1'}catch(e){}
+const storeKey=()=>demo?DEMO_KEY:KEY;
+function snapshotReal(){
+  try{
+    const raw=localStorage.getItem(KEY);if(!raw)return;
+    const snaps=JSON.parse(localStorage.getItem(SNAP_KEY)||'[]');
+    if(snaps.some(s=>s.date===today()))return;
+    snaps.push({date:today(),data:raw});while(snaps.length>3)snaps.shift();
+    try{localStorage.setItem(SNAP_KEY,JSON.stringify(snaps))}catch(e){localStorage.setItem(SNAP_KEY,JSON.stringify(snaps.slice(-1)))}
+  }catch(e){}
+}
+function loadDb(){
+  let raw=null;try{raw=localStorage.getItem(storeKey())}catch(e){}
+  if(demo&&!raw)return makeDemo();
+  try{return migrate(JSON.parse(raw||'null'))}
+  catch(e){try{localStorage.setItem(storeKey()+'_ilegivel_'+Date.now(),raw)}catch(_){}return migrate(null)}
+}
+snapshotReal();
+let db=loadDb();
 function persist(){
-  try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert('Não foi possível salvar neste aparelho. Baixe um backup agora.')}
+  try{localStorage.setItem(storeKey(),JSON.stringify(db))}catch(e){alert('Não foi possível salvar neste aparelho. Baixe um backup agora.')}
   renderAll();
   if($('orderView').classList.contains('open'))viewOrder(viewingOrder);
 }
@@ -524,6 +602,7 @@ function renderAll(){
   $('todayLbl').innerHTML=`<b>${wd[0].toUpperCase()+wd.slice(1)}</b><br>${now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'})}`;
   renderInicio();renderOrders();renderProducts();renderGestao();renderCustomers();renderFinance();renderPricing();
   $('homeSmart').innerHTML=smartBlock();
+  renderSafety();
   if($('smartModal').classList.contains('open'))renderSmart();
   if(document.activeElement!==$('goalValue'))$('goalValue').value=db.goal?fmtIn(db.goal):'';
 }
@@ -1135,10 +1214,42 @@ function scrollBarsToNow(){
 }
 
 /* ---------- backup ---------- */
-function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='backup-ahava-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+/* ---------- modo teste e cópias automáticas ---------- */
+function enterDemo(){
+  if(!confirm('Entrar no modo teste?\n\nO app vai mostrar dados de exemplo. Seus dados reais ficam guardados à parte e não são alterados.\n\nPara voltar, toque em “Sair do teste” na faixa do topo.'))return;
+  snapshotReal();demo=true;try{localStorage.setItem(DEMO_FLAG,'1')}catch(e){}
+  db=loadDb();persist();go('inicio');toast('Modo teste ativado');
+}
+function exitDemo(){
+  demo=false;try{localStorage.removeItem(DEMO_FLAG)}catch(e){}
+  db=loadDb();closeModal('smartModal');renderAll();go('inicio');toast('De volta aos seus dados reais');
+}
+function resetDemo(){
+  if(!demo||!confirm('Recriar os dados de exemplo? O que você mudou no modo teste será descartado (seus dados reais não são afetados).'))return;
+  db=makeDemo();persist();toast('Dados de exemplo recriados');
+}
+function getSnaps(){try{return JSON.parse(localStorage.getItem(SNAP_KEY)||'[]')}catch(e){return []}}
+function restoreSnap(date){
+  if(demo){alert('Saia do modo teste antes de restaurar uma cópia dos seus dados reais.');return}
+  const s=getSnaps().find(x=>x.date===date);if(!s)return;
+  if(!confirm(`Restaurar a cópia de ${fmtD(date)}?\n\nOs dados atuais serão substituídos por essa cópia. Se tiver dúvida, baixe um backup antes.`))return;
+  try{db=migrate(JSON.parse(s.data));persist();toast('Cópia restaurada')}catch(e){alert('Não foi possível ler essa cópia.')}
+}
+function renderSafety(){
+  $('demoBar').hidden=!demo;
+  $('demoCtl').innerHTML=demo?`<div class="row"><button onclick="exitDemo()">Sair do modo teste</button><button class="secondary" onclick="resetDemo()">Recriar dados de exemplo</button></div>`:`<button onclick="enterDemo()">🧪 Entrar no modo teste</button>`;
+  const snaps=getSnaps().slice().reverse();
+  $('snapList').innerHTML=snaps.length?snaps.map(s=>{let n='';try{const d=JSON.parse(s.data);n=`${(d.orders||d.sales||[]).length} pedidos · ${(d.products||[]).length} peças`}catch(e){}return `<div class="optrow"><div><b>${fmtD(s.date)}</b><div class="muted">${n}</div></div><button class="secondary sm" onclick="restoreSnap('${s.date}')">Restaurar</button></div>`}).join(''):'<div class="muted">Nenhuma cópia ainda — a primeira é feita na próxima vez que o app abrir com dados.</div>';
+}
+
+function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(demo?'TESTE-':'')+'backup-ahava-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function importData(e){
-  const f=e.target.files[0];if(!f)return;const r=new FileReader();
-  r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x.products))throw 0;if(confirm('Restaurar este backup? Os dados atuais serão substituídos.')){db=migrate(x);persist();toast('Backup restaurado')}}catch(err){alert('Arquivo de backup inválido.')}e.target.value=''};
+  const f=e.target.files[0];if(!f)return;
+  if(demo){alert('Você está no modo teste. Saia do modo teste para restaurar um backup dos seus dados reais.');e.target.value='';return}
+  const r=new FileReader();
+  r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x.products))throw 0;
+    if(x.demo&&!confirm('Este arquivo é um backup do MODO TESTE (dados de exemplo). Tem certeza que quer colocá-lo no lugar dos seus dados reais?')){e.target.value='';return}
+    if(confirm('Restaurar este backup? Os dados atuais serão substituídos.')){db=migrate(x);persist();toast('Backup restaurado')}}catch(err){alert('Arquivo de backup inválido.')}e.target.value=''};
   r.readAsText(f);
 }
 
@@ -1165,7 +1276,7 @@ function setTheme(v){
 setTheme(document.documentElement.dataset.theme||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.03-2';
+const APP_VERSION='2026.11.03-3';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
