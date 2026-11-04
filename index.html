@@ -97,6 +97,14 @@
     .ins .ico{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;background:var(--soft);font-size:16px}
     .ins.bad .ico{background:var(--redsoft)}.ins.warn .ico{background:var(--warnsoft)}.ins.ok .ico{background:var(--oksoft)}.ins.info .ico{background:var(--infosoft)}
     details.card summary{list-style:none}
+    .qa{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.qa button{width:100%;padding:14px 10px}
+    .smart{cursor:pointer;background:linear-gradient(135deg,var(--card) 40%,var(--goldsoft));transition:transform .15s}.smart:active{transform:scale(.98)}
+    .smart .chev{font-size:26px;color:var(--gold);line-height:1}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .modalbox.tall{min-height:min(80%,640px)}.modalbox.tall h2{font-size:23px}.modalbox.tall .seg button{font-size:13px;white-space:nowrap;padding:9px 4px}
+    .xclose{float:right;width:36px;height:36px;padding:0;border-radius:50%;background:var(--soft);color:var(--muted);box-shadow:none;font-size:16px;margin:-4px -4px 0 8px}
+    .abc-head{display:flex;gap:12px;align-items:flex-start;margin:18px 0 6px}
+    .abc{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex:none}.abc.A{background:var(--c-rec)}.abc.B{background:var(--c-due)}.abc.C{background:var(--muted)}
     .back{background:none;box-shadow:none;color:var(--accent);padding:6px 0;font-size:15px}
     .optrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.optrow:last-child{border-bottom:0}
     /* gráficos */
@@ -130,8 +138,8 @@
       <div class="card kpi" style="--k:var(--c-late)"><small>Em atraso</small><strong id="kLate">R$ 0,00</strong></div>
     </div>
     <div class="card" id="goalCard" hidden></div>
-    <div class="card"><div class="row between nowrap"><h3>✨ Gestão inteligente</h3><button class="secondary sm" onclick="go('gestao')">Ver tudo</button></div><div id="homeInsights"></div></div>
-    <div class="row" style="margin-top:12px"><button onclick="openOrder()">+ Novo pedido</button><button class="secondary" onclick="openProduct()">+ Nova peça</button></div>
+    <div class="qa"><button onclick="openOrder()">+ Novo pedido</button><button class="secondary" onclick="openProduct()">+ Nova peça</button></div>
+    <div id="homeSmart"></div>
     <div class="charts">
       <div class="card"><h3>Receber em breve</h3><div class="muted">Parcelas atrasadas e dos próximos 7 dias</div><div id="dueList"></div></div>
       <div class="card"><h3>Pedidos em aberto</h3><div id="openOrders"></div></div>
@@ -379,6 +387,13 @@
   <button style="margin-top:16px;width:100%" onclick="saveExpense()">Salvar despesa</button>
 </div></div>
 
+<!-- Gestão inteligente -->
+<div class="modal" id="smartModal"><div class="modalbox tall">
+  <button class="xclose" onclick="closeModal('smartModal')" aria-label="Fechar">✕</button>
+  <h2>✨ Gestão inteligente</h2>
+  <div id="smartBody"></div>
+</div></div>
+
 <!-- Receber parcela -->
 <div class="modal" id="payModal"><div class="modalbox">
   <button class="close" onclick="closeModal('payModal')">Fechar</button><h2>Registrar recebimento</h2>
@@ -508,7 +523,8 @@ function renderAll(){
   const now=new Date(),wd=now.toLocaleDateString('pt-BR',{weekday:'long'});
   $('todayLbl').innerHTML=`<b>${wd[0].toUpperCase()+wd.slice(1)}</b><br>${now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'})}`;
   renderInicio();renderOrders();renderProducts();renderGestao();renderCustomers();renderFinance();renderPricing();
-  $('homeInsights').innerHTML=insightsHtml(insights().slice(0,3));
+  $('homeSmart').innerHTML=smartBlock();
+  if($('smartModal').classList.contains('open'))renderSmart();
   if(document.activeElement!==$('goalValue'))$('goalValue').value=db.goal?fmtIn(db.goal):'';
 }
 
@@ -768,6 +784,106 @@ function insights(){
 }
 const insightsHtml=list=>`<div class="ins-list">${list.map(x=>`<div class="ins ${x.tone}"><span class="ico">${x.icon}</span><div>${x.text}</div></div>`).join('')}</div>`;
 
+// Curva ABC: peças ordenadas pelo faturamento; A = primeiros 80% do faturamento, B = até 95%, C = o resto e as sem venda
+function abcCurve(){
+  const t=today(),act=db.orders.filter(isActive);
+  let from=addDays(t,-90),label='últimos 90 dias';
+  if(!act.some(o=>o.date>=from)){from='0000-00-00';label='todo o histórico'}
+  const rev={};
+  act.filter(o=>o.date>=from).forEach(o=>o.items.forEach(i=>{const k=i.productId||i.name,r=rev[k]||(rev[k]={id:k,name:i.name,v:0,q:0});r.v+=i.qty*i.price;r.q+=i.qty}));
+  const total=sum(Object.values(rev),'v');let cum=0;
+  const rows=Object.values(rev).sort((a,b)=>b.v-a.v).map((r,ix)=>{const before=cum;cum+=r.v;const cls=ix===0||before/total<0.8?'A':before/total<0.95?'B':'C';return {...r,share:total?r.v/total:0,cls}});
+  db.products.filter(p=>p.qty>0&&!rev[p.id]).forEach(p=>rows.push({id:p.id,name:p.name,v:0,q:0,share:0,cls:'C',idle:true}));
+  return {rows,total,label};
+}
+
+// Datas comemorativas do varejo de semijoias (com Páscoa/Carnaval calculados e datas móveis)
+function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);return new Date(y,Math.floor((h+l-7*m+114)/31)-1,((h+l-7*m+114)%31)+1)}
+function nthWeekday(y,month,wd,n){const d=new Date(y,month,1);d.setDate(1+((wd-d.getDay()+7)%7)+(n-1)*7);return d}
+function seasonalDates(){
+  const t=today(),list=[];
+  for(const y of [+t.slice(0,4),+t.slice(0,4)+1]){
+    const e=easter(y),carn=new Date(e);carn.setDate(e.getDate()-47);
+    const bf=nthWeekday(y,10,4,4);bf.setDate(bf.getDate()+1);
+    [['🎭','Carnaval',carn,10,'Brincos grandes, maxi colares e peças coloridas.'],
+     ['💐','Dia da Mulher',new Date(y,2,8),10,'Mimos e pulseiras delicadas; ofereça embalagem de presente.'],
+     ['🐣','Páscoa',e,14,'Kits com um mimo de chocolate; brincos e pulseiras como presente.'],
+     ['💖','Dia das Mães',nthWeekday(y,4,0,2),30,'A maior data do ano para semijoias: conjuntos, colares com pingente e kits presente. Garanta estoque das peças da curva A.'],
+     ['💑','Dia dos Namorados',new Date(y,5,12),21,'Anéis, conjuntos e colares; monte kits de presente com embalagem especial.'],
+     ['🤝','Dia do Amigo',new Date(y,6,20),10,'Pulseiras da amizade e promoção “leve 2”.'],
+     ['👵','Dia dos Avós',new Date(y,6,26),10,'Terços, colares delicados e presentes com significado.'],
+     ['👔','Dia dos Pais',nthWeekday(y,7,0,2),21,'Terços, pulseiras e correntes masculinas.'],
+     ['⭐','Dia do Cliente',new Date(y,8,15),7,'Cupom ou brinde para as clientes fiéis — use o Top 5 da Gestão.'],
+     ['🧸','Dia das Crianças',new Date(y,9,12),14,'Brincos e pulseiras infantis, kits mãe e filha.'],
+     ['🖤','Black Friday',bf,14,'Desconto nas peças paradas (curva C); mantenha o preço da curva A.'],
+     ['🎄','Natal',new Date(y,11,25),30,'Kits presente, faixas de preço para amigo secreto e embalagem caprichada.'],
+     ['🥂','Réveillon',new Date(y,11,31),14,'Brincos e colares dourados e prateados para a virada.']
+    ].forEach(([icon,name,d,lead,tip])=>{const ds=ymd(d);if(ds>=t)list.push({icon,name,date:ds,start:addDays(ds,-lead),tip})});
+  }
+  return list.sort((a,b)=>a.date.localeCompare(b.date));
+}
+const daysUntil=s=>Math.round((parseD(s)-parseD(today()))/864e5);
+
+// Estratégias geradas a partir dos dados, seguidas de dicas gerais
+function strategies(){
+  const out=[],act=db.orders.filter(isActive),abc=abcCurve(),A=abc.rows.filter(r=>r.cls==='A'&&!r.idle),C=abc.rows.filter(r=>r.cls==='C');
+  const prod=id=>db.products.find(p=>p.id===id);
+  const lowA=A.map(r=>prod(r.id)).filter(p=>p&&p.qty<=p.min);
+  if(lowA.length)out.push(['🔁','Reponha primeiro as campeãs',`${lowA.map(p=>`<b>${esc(p.name)}</b>`).join(', ')} ${lowA.length>1?'são':'é'} curva A e ${lowA.length>1?'estão':'está'} acabando. Faltar peça A é perder a maior parte das vendas.`]);
+  const cStock=C.map(r=>prod(r.id)).filter(p=>p&&p.qty>0);
+  if(A[0]&&cStock[0]&&prod(A[0].id)){
+    const a=prod(A[0].id),c=cStock[0],kit=Math.max(1,Math.floor((a.price+c.price)*0.9))-0.1;
+    out.push(['🎁','Monte um kit',`Junte <b>${esc(a.name)}</b> (mais vendida) com <b>${esc(c.name)}</b> (pouca saída) por <b>${money(kit)}</b> — cerca de 10% de desconto. A campeã puxa a venda da peça parada.`]);
+  }
+  const pairs={};act.forEach(o=>{const n=[...new Set(o.items.map(i=>i.name))].sort();for(let i=0;i<n.length;i++)for(let j=i+1;j<n.length;j++){const k=n[i]+' + '+n[j];pairs[k]=(pairs[k]||0)+1}});
+  const pair=Object.entries(pairs).sort((a,b)=>b[1]-a[1])[0];
+  if(pair&&pair[1]>=2)out.push(['🧩','Venda junto',`<b>${esc(pair[0])}</b> já saíram juntas em ${pair[1]} pedidos. Ofereça a segunda peça sempre que alguém levar a primeira.`]);
+  const tk=act.length?sum(act,orderTotal)/act.length:0;
+  if(tk>0)out.push(['🚚','Aumente o ticket médio',`Seu ticket médio é ${money(tk)}. Ofereça um brinde ou frete grátis para compras acima de <b>${money(Math.ceil(tk*1.3/5)*5)}</b>.`]);
+  const by={};act.filter(o=>o.customerId).forEach(o=>by[o.customerId]=(by[o.customerId]||0)+orderTotal(o));
+  const best=Object.entries(by).sort((a,b)=>b[1]-a[1])[0],bc=best&&db.customers.find(c=>c.id===best[0]);
+  if(bc)out.push(['💝','Cuide da melhor cliente',`<b>${esc(bc.name)}</b> já comprou ${money(best[1])}. Um mimo, um cupom ou acesso antecipado às novidades fideliza quem mais compra.`]);
+  const odd=db.products.filter(p=>p.price>=10&&!/[,.]9\d$/.test(p.price.toFixed(2)));
+  if(odd.length)out.push(['🏷️','Preço psicológico',`${odd.length} peça${odd.length>1?'s têm':' tem'} preço que não termina em ,90 (ex.: ${esc(odd[0].name)} a ${money(odd[0].price)}). Preços como ${money(Math.ceil(odd[0].price)-0.1)} parecem menores e costumam vender mais.`]);
+  const ch={};act.forEach(o=>ch[o.channel]=(ch[o.channel]||0)+orderTotal(o));
+  const topCh=Object.entries(ch).sort((a,b)=>b[1]-a[1])[0];
+  if(topCh&&Object.keys(ch).length>1)out.push(['📣','Foque no canal que vende',`<b>${esc(topCh[0])}</b> trouxe ${fmtPct(topCh[1]/sum(Object.values(ch),x=>x)*100)} do faturamento. Concentre a divulgação lá.`]);
+  out.push(['📸','Fotos que vendem','Fotografe com luz natural e mostre a peça no corpo (orelha, pescoço, mão). Isso ajuda a cliente a imaginar o tamanho real.']);
+  out.push(['📱','Stories todos os dias','Uma “peça do dia” com preço e link do WhatsApp mantém a loja na lembrança das clientes.']);
+  out.push(['⭐','Prova social','Peça para as clientes enviarem foto usando a peça e reposte. Avaliações reais convencem mais que qualquer anúncio.']);
+  return out;
+}
+
+// Bloco clicável (Início e Gestão) com o resumo; abre o popup completo
+function smartBlock(){
+  const ins=insights(),alerts=ins.filter(x=>x.tone==='bad'||x.tone==='warn').length,next=seasonalDates()[0],A=abcCurve().rows.filter(r=>r.cls==='A'&&!r.idle).length;
+  return `<div class="card smart" role="button" tabindex="0" onclick="openSmart()" onkeydown="if(event.key==='Enter')openSmart()">
+    <div class="row between nowrap"><div><h3>✨ Gestão inteligente</h3><div class="muted">Insights, curva ABC, estratégias e datas comemorativas</div></div><span class="chev">›</span></div>
+    ${ins[0]?`<div class="ins ${ins[0].tone}" style="border:0;padding-bottom:4px"><span class="ico">${ins[0].icon}</span><div>${ins[0].text}</div></div>`:''}
+    <div class="chips">${alerts?`<span class="pill bad">${alerts} alerta${alerts>1?'s':''}</span>`:'<span class="pill ok">Tudo em dia</span>'}${next?`<span class="pill">${next.icon} ${esc(next.name)} em ${daysUntil(next.date)} dias</span>`:''}${A?`<span class="pill ok">Curva A: ${A} peça${A>1?'s':''}</span>`:''}</div>
+  </div>`;
+}
+let smartTab='insights';
+function openSmart(tab){if(tab)smartTab=tab;renderSmart();openModal('smartModal')}
+function renderSmart(){
+  const tabs=[['insights','Insights'],['abc','Curva ABC'],['estrategias','Estratégias'],['datas','Datas']];
+  let body='';
+  if(smartTab==='insights')body=`<p class="muted">Análises automáticas sobre a situação de hoje, das mais urgentes para as informativas.</p>${insightsHtml(insights())}`;
+  if(smartTab==='abc'){
+    const {rows,total,label}=abcCurve(),grp=k=>rows.filter(r=>r.cls===k),pct=k=>total?sum(grp(k),'v')/total*100:0;
+    const tips={A:'Campeãs de venda: nunca deixe faltar, mantenha o preço e use na vitrine.',B:'Intermediárias: combine com peças A em kits e divulgue com frequência.',C:'Pouca saída: faça promoção ou kits e pense bem antes de recomprar.'};
+    body=`<p class="muted">Classifica as peças pelo faturamento (${label}). Poucas peças costumam trazer a maior parte do dinheiro.</p>
+    ${rows.length?['A','B','C'].filter(k=>grp(k).length).map(k=>`<div class="abc-head"><span class="abc ${k}">${k}</span><div><b>${grp(k).length} peça${grp(k).length===1?'':'s'} · ${fmtPct(pct(k))} do faturamento</b><div class="muted">${tips[k]}</div></div></div>
+      ${grp(k).map(r=>`<div class="line"><span>${esc(r.name)}${r.idle?' <span class="muted">· sem vendas</span>':` <span class="muted">· ${r.q} un.</span>`}</span><span>${r.idle?'—':`${money(r.v)} <span class="muted">(${fmtPct(r.share*100)})</span>`}</span></div>`).join('')}`).join(''):'<div class="empty">Registre pedidos para ver a curva ABC.</div>'}`;
+  }
+  if(smartTab==='estrategias')body=`<p class="muted">Sugestões a partir das suas vendas, seguidas de dicas que funcionam para lojas de semijoias.</p>${strategies().map(([icon,title,text])=>`<div class="ins info"><span class="ico">${icon}</span><div><b>${title}</b><div>${text}</div></div></div>`).join('')}`;
+  if(smartTab==='datas'){
+    const t=today();
+    body=`<p class="muted">Próximas datas comemorativas e quando começar a divulgar.</p>${seasonalDates().slice(0,8).map(d=>{const n=daysUntil(d.date),live=d.start<=t;return `<div class="ins ${live?'warn':'info'}"><span class="ico">${d.icon}</span><div><div class="row between nowrap"><b>${d.name}</b><span class="pill ${live?'warn':''}">${n===0?'hoje':n===1?'amanhã':`em ${n} dias`}</span></div><div class="muted">${fmtD(d.date)} · ${live?'<b>Hora de divulgar!</b>':`comece a divulgar em ${fmtD(d.start)}`}</div><div>${d.tip}</div></div></div>`}).join('')}`;
+  }
+  $('smartBody').innerHTML=`<div class="seg">${tabs.map(([k,l])=>`<button class="${k===smartTab?'on':''}" onclick="smartTab='${k}';renderSmart();$('smartModal').querySelector('.modalbox').scrollTop=0">${l}</button>`).join('')}</div>${body}`;
+}
+
 /* ---------- precificação ---------- */
 // custo real de uma peça: custo de compra + embalagem + outros + tempo de preparo × valor da hora
 function unitCost(p){const pr=db.pricing;return (p.cost||0)+(p.pack||0)+(p.extra||0)+(p.prepMin||0)/60*(pr.hourly||0)}
@@ -950,8 +1066,7 @@ function renderGestao(){
   const costs=paidCosts().filter(c=>inR(c.date)),costSum=sum(costs,'value'),res=recSum-costSum;
   const recM=byMonth(rec,'paidAt'),costM=byMonth(costs,'date');
   const cards=[];
-  cards.push(gcard('✨ Gestão inteligente','Alertas e sugestões a partir dos seus dados','Análises automáticas sobre a situação de hoje: ritmo de vendas, meta, cobranças, reposição, peças paradas, margens, clientes para reativar e caixa. Não dependem do período escolhido acima.',
-    insightsHtml(insights())));
+  cards.push(smartBlock());
 
   const costCats={};costs.forEach(c=>costCats[c.cat]=(costCats[c.cat]||0)+c.value);
   cards.push(gcard('Receita x Custo','','Recebido: tudo o que entrou de fato no período (parcelas e pagamentos recebidos). Custos pagos: despesas pagas, compras de estoque lançadas, custos de venda dos pedidos e DAS. Resultado = recebido − custos pagos.',
@@ -1050,7 +1165,7 @@ function setTheme(v){
 setTheme(document.documentElement.dataset.theme||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.03-1';
+const APP_VERSION='2026.11.03-2';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
