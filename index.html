@@ -710,7 +710,20 @@ function setMore(k){
   document.querySelectorAll('[data-more]').forEach(b=>b.classList.toggle('on',b.dataset.more===k));
   ['clientes','financeiro'].forEach(x=>$('m-'+x).hidden=x!==k);
 }
-function closeModal(id){$(id).classList.remove('open')}
+// Ao abrir um pedido/peça a partir de um popup (lista de um número, ficha da cliente), guarda esse popup
+// e a posição da lista; quando tudo que foi aberto depois é fechado, ele volta exatamente onde estava.
+let returnTo=null;
+function openFrom(modalId,reopen,action){
+  returnTo={modalId,reopen,scroll:$(modalId).querySelector('.modalbox').scrollTop};
+  $(modalId).classList.remove('open');action();
+}
+function closeModal(id){
+  $(id).classList.remove('open');
+  if(returnTo)setTimeout(()=>{
+    if(!returnTo||document.querySelector('.modal.open'))return;
+    const r=returnTo;returnTo=null;r.reopen();$(r.modalId).querySelector('.modalbox').scrollTop=r.scroll;
+  },0);
+}
 function openModal(id){$(id).classList.add('open')}
 
 function renderAll(){
@@ -1112,7 +1125,7 @@ function explain(key){
     ${x.sub?`<div class="muted" style="margin-bottom:10px">${x.sub}</div>`:''}
     <div class="infotext" style="margin:0 0 6px">${x.formula}</div>
     <div class="line total"><b>Total</b><b class="${total<0?'neg':''}">${x.totalText||money(total)}</b></div>
-    ${x.rows.length?x.rows.slice(0,150).map(r=>`<div class="inst ${r.go?'tap':''}" ${r.go?`onclick="${r.go.startsWith('explain')?'':"closeModal('explainModal');"}${r.go}"`:''}><div><b>${r.l}</b>${r.sub?`<div class="muted">${r.sub}</div>`:''}</div><b style="white-space:nowrap" class="${r.v<0?'neg':''}">${r.vt??money(r.v)}</b></div>`).join('')+(x.rows.length>150?`<div class="muted">+ ${x.rows.length-150} itens</div>`:''):'<div class="empty">Nenhum item compõe este número ainda.</div>'}`;
+    ${x.rows.length?x.rows.slice(0,150).map(r=>`<div class="inst ${r.go?'tap':''}" ${r.go?`onclick="${r.go.startsWith('explain')?r.go:`openFrom('explainModal',()=>explain('${key}'),()=>${r.go})`}"`:''}><div><b>${r.l}</b>${r.sub?`<div class="muted">${r.sub}</div>`:''}</div><b style="white-space:nowrap" class="${r.v<0?'neg':''}">${r.vt??money(r.v)}</b></div>`).join('')+(x.rows.length>150?`<div class="muted">+ ${x.rows.length-150} itens</div>`:''):'<div class="empty">Nenhum item compõe este número ainda.</div>'}`;
   $('explainBody').classList.remove('showinfo');$('explainInfo').classList.remove('on');$('explainModal').querySelector('.modalbox').scrollTop=0;openModal('explainModal');
 }
 // comparação com o período anterior equivalente (até a mesma data, quando o período ainda está em andamento)
@@ -1216,7 +1229,7 @@ function openCustomer(id){
     const os=db.orders.filter(o=>o.customerId===c.id).sort((a,b)=>b.date.localeCompare(a.date)),s=custStats(c);
     html=`<h3 style="margin:18px 0 6px">Resumo</h3><div class="line"><span>Total comprado</span><b>${money(s.total)}</b></div><div class="line"><span>A receber</span><b>${money(s.open)}</b></div><div class="line"><span>Em atraso</span><b class="${s.late?'neg':''}">${money(s.late)}</b></div>
     ${c.phone?`<a class="btn secondary" style="margin-top:10px" target="_blank" rel="noopener" href="${waLink(c.phone,`Olá, ${c.name}!`)}">Abrir WhatsApp</a>`:''}
-    <h3 style="margin:18px 0 6px">Pedidos</h3>${os.length?`<div class="list">${os.map(o=>`<button class="item" onclick="closeModal('customerModal');viewOrder('${o.id}')"><div class="row between nowrap"><b>${num(o)} · ${fmtD(o.date)}</b><b>${money(orderTotal(o))}</b></div><div style="margin-top:4px">${statusPill(o.status)}</div></button>`).join('')}</div>`:'<div class="muted">Nenhum pedido ainda.</div>'}`;
+    <h3 style="margin:18px 0 6px">Pedidos</h3>${os.length?`<div class="list">${os.map(o=>`<button class="item" onclick="openFrom('customerModal',()=>openCustomer('${c.id}'),()=>viewOrder('${o.id}'))"><div class="row between nowrap"><b>${num(o)} · ${fmtD(o.date)}</b><b>${money(orderTotal(o))}</b></div><div style="margin-top:4px">${statusPill(o.status)}</div></button>`).join('')}</div>`:'<div class="muted">Nenhum pedido ainda.</div>'}`;
   }
   $('customerOrders').innerHTML=html;openModal('customerModal');
 }
@@ -1463,7 +1476,7 @@ function importData(e){
 $('dasMonth').addEventListener('change',()=>{$('dasValue').value=fmtIn(db.das[$('dasMonth').value]??'')});
 // ao sair de um campo de valor, mostra com 2 casas decimais (ex.: 13,38)
 document.addEventListener('focusout',e=>{const el=e.target;if(el.matches?.('input[inputmode=decimal]:not([data-pct])')&&numOk(el.value))el.value=fmtIn(toNum(el.value))});
-document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id)}));
 /* ---------- tela, zoom e aparência ---------- */
 // medidas da tela em Configurações, para diagnóstico
 function screenInfo(){
@@ -1489,7 +1502,7 @@ function setAccent(v){
 setAccent(document.documentElement.dataset.accent||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.04-1';
+const APP_VERSION='2026.11.04-2';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
