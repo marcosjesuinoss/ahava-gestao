@@ -152,7 +152,9 @@
     [hidden]{display:none!important}
     .chiprow{display:flex;gap:8px;overflow-x:auto;margin:0 -4px;padding:0 4px 2px}
     .chip{flex:none;border-radius:20px;padding:8px 14px;background:var(--soft);color:var(--muted);box-shadow:none;font-size:14px;font-weight:600}
-    .chip.on{background:var(--brand-grad);color:#fff;box-shadow:var(--shadow-btn)}
+    .chip.on{background:var(--brand-grad);color:#fff;box-shadow:none}
+    .arrow{box-shadow:none}
+    button.wide{width:100%;margin-top:14px;padding:14px}
     .pnav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;text-align:center}.pnav b{font-size:17px}
     .arrow{width:42px;height:42px;padding:0;border-radius:50%;font-size:24px;line-height:1;flex:none}
     .pnav a{color:var(--accent)}
@@ -229,7 +231,7 @@
 
   <!-- ESTOQUE -->
   <section id="estoque" class="section">
-    <div class="row between"><h2>Estoque</h2><button onclick="openProduct()">+ Nova peça</button></div>
+    <h2>Estoque</h2>
     <div id="stockSummary"></div>
     <div class="card">
       <input id="productSearch" placeholder="Buscar por nome, código ou categoria" oninput="renderProducts()">
@@ -1165,6 +1167,7 @@ function renderProducts(){
     <div class="card kpi tap" style="--k:var(--c-cost)" onclick="explain('stockCost')"><small>Valor de custo</small><strong>${money(costV)}</strong></div>
     <div class="card kpi tap" style="--k:var(--c-rec)" onclick="explain('stockProfit')"><small>Lucro potencial</small><strong>${money(sum(db.products.filter(p=>p.qty>0),p=>(p.price*(1-feeRate())-unitCost(p))*p.qty))}</strong></div>
     <div class="card kpi tap" style="--k:var(--c-due)" onclick="explain('stockQty')"><small>Peças em estoque</small><strong>${pcs}</strong></div></div>
+    <button class="wide" onclick="openProduct()">+ Nova peça</button>
     ${best?`<div class="card"><div class="row between nowrap"><div><div class="muted">🏆 Maior margem</div><b>${esc(best.name)}</b></div><span class="pill ok">${fmtPct(productMargin(best)*100)}</span></div>
     ${worst&&worst!==best?`<div class="row between nowrap" style="margin-top:10px"><div><div class="muted">Menor margem</div><b>${esc(worst.name)}</b></div><span class="pill ${productMargin(worst)<0.2?'bad':'warn'}">${fmtPct(productMargin(worst)*100)}</span></div>`:''}</div>`:''}`;
   $('productRows').innerHTML=list.length?list.map(p=>{const m=productMargin(p);return `<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.sku)}</span></td><td>${esc(p.category)}</td><td><span class="pill ${p.qty<=p.min?'low':''}">${p.qty}</span></td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${m==null?'—':`<span class="pill ${m<0.2?'bad':m<0.4?'warn':'ok'}">${fmtPct(m*100)}</span>`}</td><td><div class="actions"><button class="secondary" onclick="openProduct('${p.id}')">Editar</button><button class="danger" onclick="deleteProduct('${p.id}')">Excluir</button></div></td></tr>`}).join(''):'<tr><td colspan="7" class="empty">Cadastre sua primeira peça para começar.</td></tr>';
@@ -1303,7 +1306,7 @@ function renderPeriodPicker(a,b){
   const custom=period.kind==='custom';
   $('periodCustom').hidden=!custom;$('periodNav').querySelectorAll('.arrow').forEach(x=>x.style.visibility=custom?'hidden':'');
   $('periodTitle').textContent=periodTitle(a,b);
-  $('periodLbl').innerHTML=(a===b?fmtD(a):`${fmtD(a)} a ${fmtD(b)}`)+(period.offset&&!custom?` · <a href="#" onclick="period.offset=0;renderGestao();return false">voltar para o atual</a>`:'');
+  $('periodLbl').textContent=a===b?fmtD(a):`${fmtD(a)} a ${fmtD(b)}`;
 }
 function monthsBetween(a,b){const out=[];let y=+a.slice(0,4),m=+a.slice(5,7);const ey=+b.slice(0,4),em=+b.slice(5,7);while(y<ey||(y===ey&&m<=em)){out.push(`${y}-${pad(m)}`);if(++m>12){m=1;y++}}return out}
 function monthLabel(k,withYear){const d=parseD(k+'-01');return d.toLocaleDateString('pt-BR',{month:'short'})+(withYear?' '+String(d.getFullYear()).slice(2):'')}
@@ -1486,7 +1489,7 @@ function setAccent(v){
 setAccent(document.documentElement.dataset.accent||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.03-6';
+const APP_VERSION='2026.11.04-1';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
