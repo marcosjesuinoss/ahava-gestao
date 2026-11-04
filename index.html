@@ -12,14 +12,32 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
   <title>AHAVA • Gestão</title>
-  <script>try{const t=localStorage.getItem('ahava_theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+  <script>try{const t=localStorage.getItem('ahava_theme');if(t)document.documentElement.dataset.theme=t;const c=localStorage.getItem('ahava_accent');if(c)document.documentElement.dataset.accent=c}catch(e){}</script>
   <style>
-    :root{--brand:#5a7458;--brand-grad:linear-gradient(135deg,#86a082 0%,#5a7458 100%);--accent:#4d654c;--ink:#2f3430;--muted:#8b867b;--bg:#f8f6f1;--bg-grad:linear-gradient(180deg,#eef2ea 0,#f8f6f1 360px);--card:#fff;--field:#fffdf9;--line:#ece7dd;--soft:#f3efe7;--soft2:#e9efe5;--gold:#a8834a;--goldsoft:#f5eddf;--sec-ink:#7a6249;
-      --head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.4),transparent 55%),linear-gradient(125deg,#5b7459 0%,#829a7e 50%,#b8a17a 100%);
+    /* Cores neutras (claro) + cor do tema Sálvia */
+    :root{--ink:#2f3430;--muted:#8b867b;--bg:#f8f6f1;--card:#fff;--field:#fffdf9;--line:#ece7dd;--soft:#f3efe7;--gold:#a8834a;--goldsoft:#f5eddf;--sec-ink:#7a6249;
       --tab-bg:rgba(255,255,255,.92);--red:#b34d43;--redsoft:#f9ebe8;--warn:#c08431;--warnsoft:#f8efdf;--info:#4f7cae;--infosoft:#e8eff7;--ok:#4f9a4f;--oksoft:#e7f2e5;
-      --c-rec:#6aae68;--c-cost:#a27fcb;--c-due:#d8a648;--c-late:#d36457;--shadow:0 6px 22px rgba(90,74,40,.07);--shadow-btn:0 6px 16px rgba(90,116,88,.28)}
-    @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--brand:#5d7a5b;--brand-grad:linear-gradient(135deg,#71906d,#4c654b);--accent:#bcd3b6;--ink:#ecefe7;--muted:#a39e93;--bg:#141613;--bg-grad:linear-gradient(180deg,#1c211a 0,#141613 360px);--card:#1e221c;--field:#252a23;--line:#2f352c;--soft:#282c25;--soft2:#25301f;--gold:#d6b47c;--goldsoft:#2f281d;--sec-ink:#e0c28f;--head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.10),transparent 55%),linear-gradient(125deg,#2c3829 0%,#3c4a38 50%,#544832 100%);--tab-bg:rgba(30,34,28,.94);--red:#e8857a;--redsoft:#3a2522;--warn:#e2ad55;--warnsoft:#382d1c;--info:#8bb2e2;--infosoft:#1f2b3a;--ok:#82c97f;--oksoft:#20321f;--shadow:none;--shadow-btn:none}}
-    :root[data-theme="dark"]{--brand:#5d7a5b;--brand-grad:linear-gradient(135deg,#71906d,#4c654b);--accent:#bcd3b6;--ink:#ecefe7;--muted:#a39e93;--bg:#141613;--bg-grad:linear-gradient(180deg,#1c211a 0,#141613 360px);--card:#1e221c;--field:#252a23;--line:#2f352c;--soft:#282c25;--soft2:#25301f;--gold:#d6b47c;--goldsoft:#2f281d;--sec-ink:#e0c28f;--head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.10),transparent 55%),linear-gradient(125deg,#2c3829 0%,#3c4a38 50%,#544832 100%);--tab-bg:rgba(30,34,28,.94);--red:#e8857a;--redsoft:#3a2522;--warn:#e2ad55;--warnsoft:#382d1c;--info:#8bb2e2;--infosoft:#1f2b3a;--ok:#82c97f;--oksoft:#20321f;--shadow:none;--shadow-btn:none}
+      --c-rec:#6aae68;--c-cost:#a27fcb;--c-due:#d8a648;--c-late:#d36457;--shadow:0 6px 22px rgba(90,74,40,.07);
+      --brand:#5a7458;--brand-grad:linear-gradient(135deg,#86a082 0%,#5a7458 100%);--accent:#4d654c;--soft2:#e9efe5;--bg-grad:linear-gradient(180deg,#eef2ea 0,#f8f6f1 360px);
+      --head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.4),transparent 55%),linear-gradient(125deg,#5b7459 0%,#829a7e 50%,#b8a17a 100%);--shadow-btn:0 6px 16px rgba(90,116,88,.28)}
+    /* Cor do tema Rosé (claro) */
+    :root[data-accent="rose"]{--brand:#9c5f56;--brand-grad:linear-gradient(135deg,#c8948a 0%,#9a5e55 100%);--accent:#8c544b;--soft2:#f6e9e5;--bg-grad:linear-gradient(180deg,#f6ebe7 0,#f8f6f1 360px);
+      --head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.4),transparent 55%),linear-gradient(125deg,#9a5e55 0%,#c3918a 50%,#d2b48c 100%);--shadow-btn:0 6px 16px rgba(154,94,85,.28)}
+    /* Escuro: quase preto, com a cor do tema só nos destaques */
+    @media (prefers-color-scheme:dark){
+      :root:not([data-theme="light"]){--ink:#efefec;--muted:#a19e97;--bg:#0d0d0c;--card:#181817;--field:#202020;--line:#2b2b29;--soft:#222221;--gold:#d6b47c;--goldsoft:#29251d;--sec-ink:#e0c28f;
+        --tab-bg:rgba(18,18,17,.94);--red:#ec8a7f;--redsoft:#33201e;--warn:#e2ad55;--warnsoft:#30281a;--info:#8bb2e2;--infosoft:#1b2430;--ok:#86c983;--oksoft:#1c2a1c;--shadow:none;--shadow-btn:none;
+        --brand:#5d7a5b;--brand-grad:linear-gradient(135deg,#71906d,#4c654b);--accent:#b6cfb0;--soft2:#1e251d;--bg-grad:linear-gradient(180deg,#151615 0,#0d0d0c 360px);
+        --head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.08),transparent 55%),linear-gradient(125deg,#1a1c1a 0%,#232622 55%,#2e2a22 100%)}
+      :root[data-accent="rose"]:not([data-theme="light"]){--brand:#9a5f57;--brand-grad:linear-gradient(135deg,#b67f76,#8a5148);--accent:#e6b4ab;--soft2:#2a1f1d;--bg-grad:linear-gradient(180deg,#171413 0,#0d0d0c 360px);
+        --head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.08),transparent 55%),linear-gradient(125deg,#1d1918 0%,#28201e 55%,#2e2a22 100%)}
+    }
+    :root[data-theme="dark"]{--ink:#efefec;--muted:#a19e97;--bg:#0d0d0c;--card:#181817;--field:#202020;--line:#2b2b29;--soft:#222221;--gold:#d6b47c;--goldsoft:#29251d;--sec-ink:#e0c28f;
+      --tab-bg:rgba(18,18,17,.94);--red:#ec8a7f;--redsoft:#33201e;--warn:#e2ad55;--warnsoft:#30281a;--info:#8bb2e2;--infosoft:#1b2430;--ok:#86c983;--oksoft:#1c2a1c;--shadow:none;--shadow-btn:none;
+      --brand:#5d7a5b;--brand-grad:linear-gradient(135deg,#71906d,#4c654b);--accent:#b6cfb0;--soft2:#1e251d;--bg-grad:linear-gradient(180deg,#151615 0,#0d0d0c 360px);
+      --head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.08),transparent 55%),linear-gradient(125deg,#1a1c1a 0%,#232622 55%,#2e2a22 100%)}
+    :root[data-theme="dark"][data-accent="rose"]{--brand:#9a5f57;--brand-grad:linear-gradient(135deg,#b67f76,#8a5148);--accent:#e6b4ab;--soft2:#2a1f1d;--bg-grad:linear-gradient(180deg,#171413 0,#0d0d0c 360px);
+      --head-grad:radial-gradient(circle at 90% -40%,rgba(255,255,255,.08),transparent 55%),linear-gradient(125deg,#1d1918 0%,#28201e 55%,#2e2a22 100%)}
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     /* sem barras de rolagem visíveis */
     *{scrollbar-width:none}*::-webkit-scrollbar{display:none}
@@ -98,6 +116,14 @@
     .ins.bad .ico{background:var(--redsoft)}.ins.warn .ico{background:var(--warnsoft)}.ins.ok .ico{background:var(--oksoft)}.ins.info .ico{background:var(--infosoft)}
     details.card summary{list-style:none}
     .demobar{background:var(--infosoft);color:var(--info)}
+    .swatch{width:14px;height:14px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:-2px}
+    .count{font-size:12px;color:var(--muted);margin:8px 2px 0}
+    .tap{cursor:pointer;transition:transform .15s}.tap:active{transform:scale(.97)}
+    .kpi.tap small::after{content:'›';margin-left:auto;font-size:15px;opacity:.6}
+    .delta{display:inline-block;font-size:11px;font-weight:700;margin-top:6px;padding:2px 7px;border-radius:12px}.delta.up{background:var(--oksoft);color:var(--ok)}.delta.down{background:var(--redsoft);color:var(--red)}.delta.flat{background:var(--soft);color:var(--muted)}
+    .kpi.hero .delta{background:rgba(255,255,255,.22);color:#fff}
+    .grid.g6{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px}
+    @media(max-width:760px){.grid.g6{grid-template-columns:repeat(2,minmax(0,1fr))}}
     .qa{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.qa button{width:100%;padding:14px 10px}
     .smart{cursor:pointer;background:linear-gradient(135deg,var(--card) 40%,var(--goldsoft));transition:transform .15s}.smart:active{transform:scale(.98)}
     .smart .chev{font-size:26px;color:var(--gold);line-height:1}
@@ -134,10 +160,10 @@
   <section id="inicio" class="section active">
     <div class="row between"><h2>Início</h2><span class="pill" id="monthLbl"></span></div>
     <div class="grid">
-      <div class="card kpi hero"><small>Vendido no mês</small><strong id="kSold">R$ 0,00</strong></div>
-      <div class="card kpi" style="--k:var(--c-rec)"><small>Recebido no mês</small><strong id="kRec">R$ 0,00</strong></div>
-      <div class="card kpi" style="--k:var(--c-due)"><small>A receber (total)</small><strong id="kOpen">R$ 0,00</strong></div>
-      <div class="card kpi" style="--k:var(--c-late)"><small>Em atraso</small><strong id="kLate">R$ 0,00</strong></div>
+      <div class="card kpi hero tap" onclick="explain('sold')"><small>Vendido no mês</small><strong id="kSold">R$ 0,00</strong></div>
+      <div class="card kpi tap" style="--k:var(--c-rec)" onclick="explain('rec')"><small>Recebido no mês</small><strong id="kRec">R$ 0,00</strong></div>
+      <div class="card kpi tap" style="--k:var(--c-due)" onclick="explain('open')"><small>A receber (total)</small><strong id="kOpen">R$ 0,00</strong></div>
+      <div class="card kpi tap" style="--k:var(--c-late)" onclick="explain('late')"><small>Em atraso</small><strong id="kLate">R$ 0,00</strong></div>
     </div>
     <div class="card" id="goalCard" hidden></div>
     <div class="qa"><button onclick="openOrder()">+ Novo pedido</button><button class="secondary" onclick="openProduct()">+ Nova peça</button></div>
@@ -173,6 +199,7 @@
     <div id="stockSummary"></div>
     <div class="card">
       <input id="productSearch" placeholder="Buscar por nome, código ou categoria" oninput="renderProducts()">
+      <div class="count" id="productCount"></div>
       <div class="tablewrap"><table><thead><tr><th>Peça</th><th>Categoria</th><th>Qtd.</th><th>Custo unit.</th><th>Preço</th><th>Margem</th><th>Ações</th></tr></thead><tbody id="productRows"></tbody></table></div>
       <div class="muted" style="margin-top:8px">As peças são reservadas (baixadas) ao criar um pedido e voltam ao estoque se o pedido for cancelado ou excluído.</div>
     </div>
@@ -244,7 +271,11 @@
       <div class="seg" style="margin:12px 0 0">
         <button data-theme-opt="" onclick="setTheme('')">Automático</button><button data-theme-opt="light" onclick="setTheme('light')">Claro</button><button data-theme-opt="dark" onclick="setTheme('dark')">Escuro</button>
       </div>
-      <p class="muted" style="margin-bottom:0">“Automático” acompanha o modo claro/escuro do iPhone.</p>
+      <p class="muted">“Automático” acompanha o modo claro/escuro do iPhone.</p>
+      <label>Cor do tema</label>
+      <div class="seg" style="margin:0">
+        <button data-accent-opt="" onclick="setAccent('')"><span class="swatch" style="background:linear-gradient(135deg,#86a082,#5a7458)"></span>Sálvia</button><button data-accent-opt="rose" onclick="setAccent('rose')"><span class="swatch" style="background:linear-gradient(135deg,#c8948a,#9a5e55)"></span>Rosé</button>
+      </div>
     </div>
     <div class="card">
       <h3>Precificação</h3>
@@ -397,6 +428,12 @@
   </div>
   <label class="check"><input type="checkbox" id="ePaid" checked> Já foi paga</label>
   <button style="margin-top:16px;width:100%" onclick="saveExpense()">Salvar despesa</button>
+</div></div>
+
+<!-- De onde vem o número -->
+<div class="modal" id="explainModal"><div class="modalbox">
+  <button class="xclose" onclick="closeModal('explainModal')" aria-label="Fechar">✕</button>
+  <div id="explainBody"></div>
 </div></div>
 
 <!-- Gestão inteligente -->
@@ -573,9 +610,9 @@ function payState(o){
 const statusPill=k=>`<span class="st st-${ST[k].c}"><i></i>${ST[k].l}</span>`;
 function paidCosts(){
   return [
-    ...db.expenses.filter(e=>e.paid&&e.paidAt).map(e=>({date:e.paidAt,value:e.value,cat:e.category})),
-    ...db.orders.filter(o=>isActive(o)&&orderExtra(o)>0).map(o=>({date:o.date,value:orderExtra(o),cat:'Custos de venda'})),
-    ...Object.entries(db.das).map(([k,v])=>({date:k+'-20',value:Number(v)||0,cat:'DAS'}))
+    ...db.expenses.filter(e=>e.paid&&e.paidAt).map(e=>({date:e.paidAt,value:e.value,cat:e.category,label:e.desc})),
+    ...db.orders.filter(o=>isActive(o)&&orderExtra(o)>0).map(o=>({date:o.date,value:orderExtra(o),cat:'Custos de venda',label:`Taxas, embalagem e frete do pedido ${num(o)}`,oid:o.id})),
+    ...Object.entries(db.das).map(([k,v])=>({date:k+'-20',value:Number(v)||0,cat:'DAS',label:'DAS de '+parseD(k+'-01').toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}))
   ];
 }
 function waLink(phone,msg){let d=String(phone||'').replace(/\D/g,'');if(!d)return '';if(d.length<=11)d='55'+d;return `https://wa.me/${d}?text=${encodeURIComponent(msg)}`}
@@ -640,7 +677,8 @@ function renderOrders(){
   let list=db.orders.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.number-a.number);
   if(orderStatusFilter)list=list.filter(o=>o.status===orderStatusFilter);
   if(q)list=list.filter(o=>(num(o)+' '+custName(o)+' '+o.items.map(i=>i.name).join(' ')).toLowerCase().includes(q));
-  $('orderFilter').innerHTML=orderStatusFilter?`<button class="secondary sm" onclick="orderStatusFilter='';renderOrders()">${ST[orderStatusFilter].l} ✕</button>`:'';
+  $('orderFilter').innerHTML=(orderStatusFilter?`<button class="secondary sm" onclick="orderStatusFilter='';renderOrders()">${ST[orderStatusFilter].l} ✕</button>`:'')
+    +(q||orderStatusFilter?`<div class="count">${list.length} resultado${list.length===1?'':'s'}${list.length?` · ${money(sum(list.filter(isActive),orderTotal))}`:''}</div>`:'');
   $('orderList').innerHTML=list.length?list.slice(0,200).map(o=>`<button class="item" onclick="viewOrder('${o.id}')"><div class="row between nowrap"><b>${num(o)} · ${esc(custName(o))}</b><b>${money(orderTotal(o))}</b></div><div class="row between nowrap" style="margin-top:4px"><span class="muted">${fmtD(o.date)} · ${sum(o.items,'qty')} peça(s)</span>${statusPill(o.status)}</div>${payState(o)?`<div style="margin-top:6px">${payState(o)}</div>`:''}</button>`).join(''):'<div class="empty">Nenhum pedido encontrado.</div>';
   $('ordersStatus').innerHTML=STATUSES.map(s=>`<button class="srow" onclick="filterStatus('${s.k}')"><span class="dot ${s.c}"></span>${s.l}<span class="cnt">${db.orders.filter(o=>o.status===s.k).length}</span><span class="chev">›</span></button>`).join('');
 }
@@ -935,11 +973,8 @@ function strategies(){
 
 // Bloco clicável (Início e Gestão) com o resumo; abre o popup completo
 function smartBlock(){
-  const ins=insights(),alerts=ins.filter(x=>x.tone==='bad'||x.tone==='warn').length,next=seasonalDates()[0],A=abcCurve().rows.filter(r=>r.cls==='A'&&!r.idle).length;
   return `<div class="card smart" role="button" tabindex="0" onclick="openSmart()" onkeydown="if(event.key==='Enter')openSmart()">
-    <div class="row between nowrap"><div><h3>✨ Gestão inteligente</h3><div class="muted">Insights, curva ABC, estratégias e datas comemorativas</div></div><span class="chev">›</span></div>
-    ${ins[0]?`<div class="ins ${ins[0].tone}" style="border:0;padding-bottom:4px"><span class="ico">${ins[0].icon}</span><div>${ins[0].text}</div></div>`:''}
-    <div class="chips">${alerts?`<span class="pill bad">${alerts} alerta${alerts>1?'s':''}</span>`:'<span class="pill ok">Tudo em dia</span>'}${next?`<span class="pill">${next.icon} ${esc(next.name)} em ${daysUntil(next.date)} dias</span>`:''}${A?`<span class="pill ok">Curva A: ${A} peça${A>1?'s':''}</span>`:''}</div>
+    <div class="row between nowrap"><h3>✨ Gestão inteligente</h3><span class="chev">›</span></div>
   </div>`;
 }
 let smartTab='insights';
@@ -961,6 +996,55 @@ function renderSmart(){
     body=`<p class="muted">Próximas datas comemorativas e quando começar a divulgar.</p>${seasonalDates().slice(0,8).map(d=>{const n=daysUntil(d.date),live=d.start<=t;return `<div class="ins ${live?'warn':'info'}"><span class="ico">${d.icon}</span><div><div class="row between nowrap"><b>${d.name}</b><span class="pill ${live?'warn':''}">${n===0?'hoje':n===1?'amanhã':`em ${n} dias`}</span></div><div class="muted">${fmtD(d.date)} · ${live?'<b>Hora de divulgar!</b>':`comece a divulgar em ${fmtD(d.start)}`}</div><div>${d.tip}</div></div></div>`}).join('')}`;
   }
   $('smartBody').innerHTML=`<div class="seg">${tabs.map(([k,l])=>`<button class="${k===smartTab?'on':''}" onclick="smartTab='${k}';renderSmart();$('smartModal').querySelector('.modalbox').scrollTop=0">${l}</button>`).join('')}</div>${body}`;
+}
+
+/* ---------- "de onde vem esse número?" ---------- */
+// Cada bloco de número (Início, Estoque e Gestão) abre a conta e a lista de itens que formam o total
+function explain(key){
+  const t=today(),m=t.slice(0,7),act=db.orders.filter(isActive),insts=allInsts();
+  const byDate=(f)=>(x,y)=>f(y).localeCompare(f(x));
+  const oRow=o=>({l:`${num(o)} · ${esc(custName(o))}`,sub:`${fmtD(o.date)} · ${ST[o.status].l}`,v:orderTotal(o),go:`viewOrder('${o.id}')`});
+  const iRow=i=>({l:`${esc(custName(i.o))} <span class="muted">${num(i.o)}</span>`,sub:i.paidAt?`Recebido em ${fmtD(i.paidAt)} · ${esc(i.method)}`:`${i.due<t?'Venceu':'Vence'} em ${fmtD(i.due)}`,v:i.value,go:`viewOrder('${i.o.id}')`});
+  const pRow=(p,sub,v,vt)=>({l:esc(p.name),sub,v,vt,go:`openProduct('${p.id}')`});
+  const stock=db.products.filter(p=>p.qty>0);
+  const [a,b]=periodRange(),inR=s=>!!s&&s>=a&&s<=b,per=`${fmtD(a)} a ${fmtD(b)}`;
+  const gOrders=act.filter(o=>inR(o.date)).sort(byDate(o=>o.date));
+  const gRec=insts.filter(i=>inR(i.paidAt)).sort(byDate(i=>i.paidAt)),gCost=paidCosts().filter(c=>inR(c.date)).sort(byDate(c=>c.date));
+  const cRow=c=>({l:esc(c.label||c.cat),sub:`${fmtD(c.date)} · ${esc(c.cat)}`,v:c.value,go:c.oid?`viewOrder('${c.oid}')`:''});
+  const E={
+    sold:()=>({title:'Vendido no mês',formula:'Soma do valor total dos pedidos feitos neste mês, já recebidos ou não. Pedidos cancelados não entram.',rows:act.filter(o=>o.date.slice(0,7)===m).sort(byDate(o=>o.date)).map(oRow)}),
+    rec:()=>({title:'Recebido no mês',formula:'Soma de tudo que entrou de fato neste mês: pagamentos à vista e parcelas marcadas como recebidas, pela data do recebimento.',rows:insts.filter(i=>i.paidAt&&i.paidAt.slice(0,7)===m).sort(byDate(i=>i.paidAt)).map(iRow)}),
+    open:()=>({title:'A receber (total)',formula:'Soma de todas as parcelas ainda não recebidas, de qualquer mês, incluindo as atrasadas. Pedidos cancelados não entram.',rows:insts.filter(i=>!i.paidAt).sort((x,y)=>x.due.localeCompare(y.due)).map(iRow)}),
+    late:()=>({title:'Em atraso',formula:'Parcelas com vencimento antes de hoje que ainda não foram marcadas como recebidas.',rows:insts.filter(i=>!i.paidAt&&i.due<t).sort((x,y)=>x.due.localeCompare(y.due)).map(iRow)}),
+    stockSale:()=>({title:'Valor de venda do estoque',formula:'Para cada peça: quantidade em estoque × preço de venda. É quanto você faturaria vendendo tudo pelo preço cadastrado.',rows:stock.map(p=>pRow(p,`${p.qty} un. × ${money(p.price)}`,p.qty*p.price)).sort((x,y)=>y.v-x.v)}),
+    stockCost:()=>({title:'Valor de custo do estoque',formula:'Para cada peça: quantidade em estoque × custo unitário. É quanto dinheiro está investido nas peças paradas no estoque.',rows:stock.map(p=>pRow(p,`${p.qty} un. × ${money(p.cost)}`,p.qty*p.cost)).sort((x,y)=>y.v-x.v)}),
+    stockProfit:()=>({title:'Lucro potencial',formula:`Para cada peça: quantidade × lucro por peça. Lucro por peça = preço − imposto e taxa do cartão (${fmtPct((db.pricing.tax||0)+(db.pricing.card||0))}) − custo − embalagem − outros custos − tempo de preparo.`,rows:stock.map(p=>{const u=p.price*(1-feeRate())-unitCost(p);return pRow(p,`${p.qty} un. × ${money(u)} de lucro`,u*p.qty)}).sort((x,y)=>y.v-x.v)}),
+    stockQty:()=>({title:'Peças em estoque',formula:'Soma das quantidades de todas as peças cadastradas.',total:sum(stock,'qty'),totalText:`${sum(stock,'qty')} peças`,rows:stock.map(p=>pRow(p,p.category,p.qty,`${p.qty} un.`)).sort((x,y)=>y.v-x.v)}),
+    g_sold:()=>({title:'Vendido',sub:per,formula:'Soma do valor total dos pedidos feitos no período, recebidos ou não. Cancelados não entram.',rows:gOrders.map(oRow)}),
+    g_rec:()=>({title:'Recebido',sub:per,formula:'Tudo que entrou de fato no período (pela data do recebimento).',rows:gRec.map(iRow)}),
+    g_cost:()=>({title:'Custos pagos',sub:per,formula:'Despesas pagas (incluindo compras de estoque lançadas), taxas/embalagem/frete dos pedidos e DAS, no período.',rows:gCost.map(cRow)}),
+    g_res:()=>{const r=sum(gRec,'value'),c=sum(gCost,'value');return {title:'Resultado',sub:per,formula:'Recebido − custos pagos no período. Positivo: sobrou dinheiro. Negativo: saiu mais do que entrou.',total:r-c,rows:[{l:'Recebido',sub:`${gRec.length} recebimento(s)`,v:r,go:"explain('g_rec')"},{l:'Custos pagos',sub:`${gCost.length} lançamento(s)`,v:-c,go:"explain('g_cost')"}]}},
+    g_orders:()=>({title:'Pedidos',sub:per,formula:'Quantidade de pedidos feitos no período (cancelados não entram).',total:gOrders.length,totalText:`${gOrders.length} pedido${gOrders.length===1?'':'s'}`,rows:gOrders.map(oRow)}),
+    g_ticket:()=>{const s=sum(gOrders,orderTotal);return {title:'Ticket médio',sub:per,formula:`Valor vendido ÷ número de pedidos = ${money(s)} ÷ ${gOrders.length}.`,total:gOrders.length?s/gOrders.length:0,rows:gOrders.map(oRow)}}
+  };
+  const x=E[key]();if(!x)return;const total=x.total??sum(x.rows,'v');
+  $('explainBody').innerHTML=`<h2>${x.title}</h2>${x.sub?`<div class="muted" style="margin:-10px 0 10px">${x.sub}</div>`:''}
+    <div class="notice" style="margin-top:0">${x.formula}</div>
+    <div class="line total"><b>Total</b><b class="${total<0?'neg':''}">${x.totalText||money(total)}</b></div>
+    ${x.rows.length?x.rows.slice(0,150).map(r=>`<div class="inst ${r.go?'tap':''}" ${r.go?`onclick="${r.go.startsWith('explain')?'':"closeModal('explainModal');"}${r.go}"`:''}><div><b>${r.l}</b>${r.sub?`<div class="muted">${r.sub}</div>`:''}</div><b style="white-space:nowrap" class="${r.v<0?'neg':''}">${r.vt??money(r.v)}</b></div>`).join('')+(x.rows.length>150?`<div class="muted">+ ${x.rows.length-150} itens</div>`:''):'<div class="empty">Nenhum item compõe este número ainda.</div>'}`;
+  $('explainModal').querySelector('.modalbox').scrollTop=0;openModal('explainModal');
+}
+// comparação com o período anterior equivalente (até a mesma data, quando o período ainda está em andamento)
+function prevRange(a,b,kind){
+  const t=today(),e=b>t?t:b;if(e<a)return null;
+  if(kind==='ano'||kind==='ano_passado')return [addMonths(a,-12),addMonths(e,-12)];
+  if(['mes','mes_passado','mes_esp'].includes(kind))return [addMonths(a,-1),addMonths(e,-1)];
+  const len=Math.round((parseD(e)-parseD(a))/864e5)+1;return [addDays(a,-len),addDays(a,-1)];
+}
+function periodMetrics(a,b){
+  const inR=s=>!!s&&s>=a&&s<=b,os=db.orders.filter(o=>isActive(o)&&inR(o.date)),sold=sum(os,orderTotal);
+  const rec=sum(allInsts().filter(i=>inR(i.paidAt)),'value'),cost=sum(paidCosts().filter(c=>inR(c.date)),'value');
+  return {sold,orders:os.length,ticket:os.length?sold/os.length:0,rec,cost,res:rec-cost};
 }
 
 /* ---------- precificação ---------- */
@@ -993,13 +1077,14 @@ function updatePriceCalc(){
 function renderProducts(){
   const q=($('productSearch').value||'').toLowerCase();
   const list=db.products.filter(p=>(p.name+' '+p.sku+' '+p.category).toLowerCase().includes(q));
+  $('productCount').textContent=q?`${list.length} resultado${list.length===1?'':'s'} · ${sum(list,p=>Number(p.qty))} peça${sum(list,p=>Number(p.qty))===1?'':'s'} em estoque`:'';
   const pcs=sum(db.products,p=>Number(p.qty)),costV=sum(db.products,p=>p.cost*p.qty),saleV=sum(db.products,p=>p.price*p.qty);
   const ranked=db.products.filter(p=>productMargin(p)!=null).sort((a,b)=>productMargin(b)-productMargin(a)),best=ranked[0],worst=ranked[ranked.length-1];
   $('stockSummary').innerHTML=`<div class="grid">
-    <div class="card kpi hero"><small>Valor de venda do estoque</small><strong>${money(saleV)}</strong></div>
-    <div class="card kpi" style="--k:var(--c-cost)"><small>Valor de custo</small><strong>${money(costV)}</strong></div>
-    <div class="card kpi" style="--k:var(--c-rec)"><small>Lucro potencial</small><strong>${money(sum(db.products,p=>(p.price*(1-feeRate())-unitCost(p))*p.qty))}</strong></div>
-    <div class="card kpi" style="--k:var(--c-due)"><small>Peças em estoque</small><strong>${pcs}</strong></div></div>
+    <div class="card kpi hero tap" onclick="explain('stockSale')"><small>Valor de venda do estoque</small><strong>${money(saleV)}</strong></div>
+    <div class="card kpi tap" style="--k:var(--c-cost)" onclick="explain('stockCost')"><small>Valor de custo</small><strong>${money(costV)}</strong></div>
+    <div class="card kpi tap" style="--k:var(--c-rec)" onclick="explain('stockProfit')"><small>Lucro potencial</small><strong>${money(sum(db.products.filter(p=>p.qty>0),p=>(p.price*(1-feeRate())-unitCost(p))*p.qty))}</strong></div>
+    <div class="card kpi tap" style="--k:var(--c-due)" onclick="explain('stockQty')"><small>Peças em estoque</small><strong>${pcs}</strong></div></div>
     ${best?`<div class="card"><div class="row between nowrap"><div><div class="muted">🏆 Maior margem</div><b>${esc(best.name)}</b></div><span class="pill ok">${fmtPct(productMargin(best)*100)}</span></div>
     ${worst&&worst!==best?`<div class="row between nowrap" style="margin-top:10px"><div><div class="muted">Menor margem</div><b>${esc(worst.name)}</b></div><span class="pill ${productMargin(worst)<0.2?'bad':'warn'}">${fmtPct(productMargin(worst)*100)}</span></div>`:''}</div>`:''}`;
   $('productRows').innerHTML=list.length?list.map(p=>{const m=productMargin(p);return `<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.sku)}</span></td><td>${esc(p.category)}</td><td><span class="pill ${p.qty<=p.min?'low':''}">${p.qty}</span></td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${m==null?'—':`<span class="pill ${m<0.2?'bad':m<0.4?'warn':'ok'}">${fmtPct(m*100)}</span>`}</td><td><div class="actions"><button class="secondary" onclick="openProduct('${p.id}')">Editar</button><button class="danger" onclick="deleteProduct('${p.id}')">Excluir</button></div></td></tr>`}).join(''):'<tr><td colspan="7" class="empty">Cadastre sua primeira peça para começar.</td></tr>';
@@ -1145,6 +1230,17 @@ function renderGestao(){
   const costs=paidCosts().filter(c=>inR(c.date)),costSum=sum(costs,'value'),res=recSum-costSum;
   const recM=byMonth(rec,'paidAt'),costM=byMonth(costs,'date');
   const cards=[];
+  // resumo do período com comparação ao período anterior equivalente; cada bloco abre a conta
+  const kind=$('period').value,pr=kind!=='prox3m'?prevRange(a,b,kind):null,cur=periodMetrics(a,b);
+  let pv=pr&&periodMetrics(pr[0],pr[1]);const noPrev=pv&&!(pv.sold||pv.rec||pv.cost);if(noPrev)pv=null;
+  const tile=(key,label,val,txt,k,invert,hero)=>{
+    let d='';
+    if(pv&&(pv[key]||val)){const p=pv[key],ch=p?(val-p)/Math.abs(p):1,up=ch>0.005,down=ch<-0.005;
+      d=`<span class="delta ${up?(invert?'down':'up'):down?(invert?'up':'down'):'flat'}">${up?'▲':down?'▼':'='} ${p?fmtPct(Math.abs(ch)*100):'novo'}</span>`}
+    return `<div class="card kpi tap ${hero?'hero':''}" ${k?`style="--k:${k}"`:''} onclick="explain('g_${key}')"><small>${label}</small><strong class="${val<0?'neg':''}">${txt}</strong>${d}</div>`;
+  };
+  cards.push(`<div class="grid g6">${tile('sold','Vendido',cur.sold,money(cur.sold),'',0,1)}${tile('rec','Recebido',cur.rec,money(cur.rec),'var(--c-rec)')}${tile('cost','Custos pagos',cur.cost,money(cur.cost),'var(--c-cost)',1)}${tile('res','Resultado',cur.res,money(cur.res),cur.res<0?'var(--c-late)':'var(--c-rec)')}${tile('orders','Pedidos',cur.orders,String(cur.orders),'var(--info)')}${tile('ticket','Ticket médio',cur.ticket,money(cur.ticket),'var(--c-due)')}</div>
+    <div class="count">${pv?`▲▼ comparado com ${fmtD(pr[0])} a ${fmtD(pr[1])}. `:noPrev?'Sem movimento no período anterior para comparar. ':''}Toque em um bloco para ver a conta.</div>`);
   cards.push(smartBlock());
 
   const costCats={};costs.forEach(c=>costCats[c.cat]=(costCats[c.cat]||0)+c.value);
@@ -1274,9 +1370,15 @@ function setTheme(v){
   document.querySelectorAll('[data-theme-opt]').forEach(b=>b.classList.toggle('on',b.dataset.themeOpt===(v||'')));
 }
 setTheme(document.documentElement.dataset.theme||'');
+function setAccent(v){
+  try{v?localStorage.setItem('ahava_accent',v):localStorage.removeItem('ahava_accent')}catch(e){}
+  if(v)document.documentElement.dataset.accent=v;else delete document.documentElement.dataset.accent;
+  document.querySelectorAll('[data-accent-opt]').forEach(b=>b.classList.toggle('on',b.dataset.accentOpt===(v||'')));
+}
+setAccent(document.documentElement.dataset.accent||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.03-3';
+const APP_VERSION='2026.11.03-4';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
