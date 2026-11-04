@@ -145,8 +145,10 @@
     .kpi.tap small::after{content:'›';margin-left:auto;font-size:15px;opacity:.6}
     .delta{display:inline-block;font-size:11px;font-weight:700;margin-top:6px;padding:2px 7px;border-radius:12px}.delta.up{background:var(--oksoft);color:var(--ok)}.delta.down{background:var(--redsoft);color:var(--red)}.delta.flat{background:var(--soft);color:var(--muted)}
     .kpi.hero .delta{background:rgba(255,255,255,.22);color:#fff}
-    .info-btn{width:26px;height:26px;padding:0;border-radius:50%;background:none;box-shadow:none;border:1.5px solid var(--line);color:var(--muted);font-family:Georgia,serif;font-size:13px;flex:none}
-    .showinfo .info-btn{background:var(--soft2);color:var(--accent);border-color:var(--soft2)}
+    /* "i" e fechar no canto do popup, afastados para evitar toque errado */
+    .mhead{float:right;display:flex;align-items:center;gap:22px;margin:-4px -4px 0 12px}.mhead .xclose{float:none;margin:0}
+    .info-btn{width:36px;height:36px;padding:0;border-radius:50%;background:none;box-shadow:none;border:1.5px solid var(--line);color:var(--muted);font-family:Georgia,serif;font-size:15px;flex:none}
+    .info-btn.on{background:var(--soft2);color:var(--accent);border-color:var(--soft2)}
     [hidden]{display:none!important}
     .chiprow{display:flex;gap:8px;overflow-x:auto;margin:0 -4px;padding:0 4px 2px}
     .chip{flex:none;border-radius:20px;padding:8px 14px;background:var(--soft);color:var(--muted);box-shadow:none;font-size:14px;font-weight:600}
@@ -474,7 +476,10 @@
 
 <!-- De onde vem o número -->
 <div class="modal" id="explainModal"><div class="modalbox">
-  <button class="xclose" onclick="closeModal('explainModal')" aria-label="Fechar">✕</button>
+  <div class="mhead">
+    <button class="info-btn" id="explainInfo" aria-label="Como é calculado" onclick="$('explainBody').classList.toggle('showinfo');this.classList.toggle('on')">i</button>
+    <button class="xclose" onclick="closeModal('explainModal')" aria-label="Fechar">✕</button>
+  </div>
   <div id="explainBody"></div>
 </div></div>
 
@@ -1101,12 +1106,12 @@ function explain(key){
     g_ticket:()=>{const s=sum(gOrders,orderTotal);return {title:'Ticket médio',sub:per,formula:`Valor vendido ÷ número de pedidos = ${money(s)} ÷ ${gOrders.length}.`,total:gOrders.length?s/gOrders.length:0,rows:gOrders.map(oRow)}}
   };
   const x=E[key]();if(!x)return;const total=x.total??sum(x.rows,'v');
-  $('explainBody').innerHTML=`<div class="row nowrap" style="gap:10px;align-items:center;margin-bottom:${x.sub?4:12}px"><h2 style="margin:0">${x.title}</h2><button class="info-btn" aria-label="Como é calculado" onclick="this.closest('#explainBody').classList.toggle('showinfo')">i</button></div>
+  $('explainBody').innerHTML=`<h2 style="margin:0 0 ${x.sub?4:12}px">${x.title}</h2>
     ${x.sub?`<div class="muted" style="margin-bottom:10px">${x.sub}</div>`:''}
     <div class="infotext" style="margin:0 0 6px">${x.formula}</div>
     <div class="line total"><b>Total</b><b class="${total<0?'neg':''}">${x.totalText||money(total)}</b></div>
     ${x.rows.length?x.rows.slice(0,150).map(r=>`<div class="inst ${r.go?'tap':''}" ${r.go?`onclick="${r.go.startsWith('explain')?'':"closeModal('explainModal');"}${r.go}"`:''}><div><b>${r.l}</b>${r.sub?`<div class="muted">${r.sub}</div>`:''}</div><b style="white-space:nowrap" class="${r.v<0?'neg':''}">${r.vt??money(r.v)}</b></div>`).join('')+(x.rows.length>150?`<div class="muted">+ ${x.rows.length-150} itens</div>`:''):'<div class="empty">Nenhum item compõe este número ainda.</div>'}`;
-  $('explainBody').classList.remove('showinfo');$('explainModal').querySelector('.modalbox').scrollTop=0;openModal('explainModal');
+  $('explainBody').classList.remove('showinfo');$('explainInfo').classList.remove('on');$('explainModal').querySelector('.modalbox').scrollTop=0;openModal('explainModal');
 }
 // comparação com o período anterior equivalente (até a mesma data, quando o período ainda está em andamento)
 function prevRange(a,b,kind){
@@ -1481,7 +1486,7 @@ function setAccent(v){
 setAccent(document.documentElement.dataset.accent||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.03-5';
+const APP_VERSION='2026.11.03-6';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
