@@ -124,6 +124,19 @@
     .line{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.line.total{border-bottom:0;font-size:16px;padding-top:12px}
     .inst{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--line)}.inst:last-child{border-bottom:0}
     .itemrow{display:grid;grid-template-columns:1fr 60px 86px 38px;gap:6px;margin-bottom:8px;align-items:center}.itemrow button{padding:10px 0}
+    /* peça do pedido: foto + nome em cima, quantidade e preço embaixo */
+    .itemrow.two{grid-template-columns:70px 1fr 42px;gap:6px 8px;padding:10px;border:1px solid var(--line);border-radius:16px;align-items:end}
+    .itemrow.two .psel{grid-column:1/-1}.itemrow.two .mini{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted);margin:0}
+    .psel{display:flex;align-items:center;gap:8px;min-width:0}.psel select{min-width:0;flex:1}
+    /* fotos das peças */
+    .thumb{width:40px;height:40px;border-radius:12px;object-fit:cover;flex:none;background:var(--soft);display:inline-grid;place-items:center;color:var(--muted);font-size:16px;vertical-align:middle}
+    .thumb.sm{width:30px;height:30px;border-radius:9px;font-size:13px}
+    .pcell{display:flex;align-items:center;gap:10px}
+    .photoedit{display:flex;align-items:center;gap:14px;margin:4px 0 14px}
+    .pphoto{width:84px;height:84px;border-radius:20px;background:var(--soft);display:grid;place-items:center;overflow:hidden;flex:none;color:var(--muted);font-size:26px;border:1px dashed var(--line)}
+    .pphoto img{width:100%;height:100%;object-fit:cover}
+    #photoModal{z-index:20}
+    .photoview{width:100%;max-height:70vh;object-fit:contain;border-radius:16px;margin-top:8px;background:var(--soft)}
     .totals{background:var(--soft);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:14px}
     .modal{position:fixed;inset:0;background:rgba(20,22,18,.45);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:10;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}.modal.open{display:flex}
     .modalbox{background:var(--card);color:var(--ink);border-radius:24px;padding:22px;width:min(560px,100%);max-height:calc(100% - 40px - env(safe-area-inset-top));overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
@@ -376,6 +389,13 @@
 <div class="modal" id="productModal"><div class="modalbox">
   <button class="close" onclick="closeModal('productModal')">Fechar</button><h2 id="productTitle">Nova peça</h2>
   <input type="hidden" id="pId">
+  <div class="photoedit">
+    <div class="pphoto" id="pPhotoBox"></div>
+    <div class="row" style="gap:6px">
+      <label class="btn secondary sm" style="margin:0"><span id="pPhotoBtn">📷 Adicionar foto</span><input type="file" accept="image/*" id="pPhotoFile" style="display:none" onchange="pickPhoto(event)"></label>
+      <button class="secondary sm" type="button" id="pPhotoDel" onclick="pendingPhoto=null;showPhotoEdit()">Remover</button>
+    </div>
+  </div>
   <div class="formgrid">
     <div class="field"><label>Nome da peça *</label><input id="pName" placeholder="Ex.: Colar delicado"></div>
     <div class="field"><label>Código / SKU</label><input id="pSku" placeholder="Ex.: COL001"></div>
@@ -400,6 +420,12 @@
   <button style="margin-top:16px;width:100%" onclick="saveProduct()">Salvar peça</button>
 </div></div>
 
+<!-- Foto da peça em tamanho grande -->
+<div class="modal" id="photoModal"><div class="modalbox">
+  <button class="close" onclick="closeModal('photoModal')">Fechar</button><h2 id="photoTitle"></h2>
+  <img class="photoview" id="photoBig" alt="">
+</div></div>
+
 <!-- Pedido (criar/editar) -->
 <div class="modal" id="orderModal"><div class="modalbox">
   <button class="close" onclick="closeModal('orderModal')">Fechar</button><h2 id="orderTitle">Novo pedido</h2>
@@ -415,7 +441,6 @@
     <div class="field full"><label>Canal</label><select id="oChannel"></select></div>
   </div>
   <h3 style="margin:16px 0 8px">Peças</h3>
-  <div class="itemrow muted" style="margin-bottom:4px"><span>Peça</span><span>Qtd.</span><span>Preço un.</span><span></span></div>
   <div id="oItems"></div>
   <button class="secondary sm" type="button" onclick="addItemRow();updateOrderTotals()">+ Adicionar peça</button>
   <div class="formgrid" style="margin-top:12px">
@@ -635,6 +660,75 @@ function persist(){
   renderAll();
   if($('orderView').classList.contains('open'))viewOrder(viewingOrder);
 }
+/* ---------- fotos das peças ----------
+   Ficam no IndexedDB do aparelho (banco "ahava_fotos"), separadas dos dados em localStorage:
+   uma foto com problema nunca afeta pedidos, clientes ou estoque. Chave = id da peça
+   (no modo teste, com o prefixo "teste:", para nunca misturar com as fotos reais). */
+const PHOTO_DB='ahava_fotos';
+let photos={},photoDbP=null,pendingPhoto; // pendingPhoto: undefined = sem mudança, null = remover, texto = nova foto
+const photoKey=id=>(demo?'teste:':'')+id;
+function photoDb(){
+  if(!photoDbP)photoDbP=new Promise((ok,no)=>{
+    if(!window.indexedDB)return no(new Error('sem IndexedDB'));
+    const r=indexedDB.open(PHOTO_DB,1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('fotos');
+    r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);
+  });
+  photoDbP.catch(()=>{photoDbP=null});
+  return photoDbP;
+}
+async function photoTx(fn){
+  const d=await photoDb();
+  return new Promise((ok,no)=>{const t=d.transaction('fotos','readwrite'),s=t.objectStore('fotos');const res=fn(s);t.oncomplete=()=>ok(res?.result);t.onerror=t.onabort=()=>no(t.error)});
+}
+async function loadPhotos(){
+  try{
+    const d=await photoDb(),pre=demo?'teste:':'',all={};
+    await new Promise((ok,no)=>{const r=d.transaction('fotos').objectStore('fotos').openCursor();
+      r.onsuccess=()=>{const c=r.result;if(!c)return ok();const k=String(c.key);
+        if(pre?k.startsWith(pre):!k.startsWith('teste:'))all[k.slice(pre.length)]=c.value;c.continue()};
+      r.onerror=()=>no(r.error)});
+    photos=all;
+  }catch(e){photos={}}
+}
+async function setPhoto(id,data){
+  await photoTx(s=>data?s.put(data,photoKey(id)):s.delete(photoKey(id)));
+  if(data)photos[id]=data;else delete photos[id];
+}
+// reduz a foto (máx. 640px, JPEG) antes de guardar: uma foto de 3 MB vira uns 50 KB
+function shrinkImage(file){
+  return new Promise((ok,no)=>{
+    const url=URL.createObjectURL(file),img=new Image();
+    img.onload=()=>{
+      const max=640,s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
+      c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);
+      const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);ok(c.toDataURL('image/jpeg',0.78));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);no(new Error('imagem'))};
+    img.src=url;
+  });
+}
+function thumb(id,cls='',big){
+  const src=photos[id];
+  return src?`<img class="thumb ${cls}" src="${src}" alt=""${big?` onclick="event.stopPropagation();showPhoto('${id}')"`:''}>`:`<span class="thumb ${cls}">💎</span>`;
+}
+function showPhoto(id){
+  const p=db.products.find(x=>x.id===id);if(!photos[id])return;
+  $('photoTitle').textContent=p?.name||'';$('photoBig').src=photos[id];openModal('photoModal');
+}
+function showPhotoEdit(){
+  const id=$('pId').value,src=pendingPhoto===undefined?photos[id]:pendingPhoto;
+  $('pPhotoBox').innerHTML=src?`<img src="${src}" alt="">`:'💎';
+  $('pPhotoBtn').textContent=src?'📷 Trocar foto':'📷 Adicionar foto';
+  $('pPhotoDel').hidden=!src;
+}
+async function pickPhoto(e){
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{pendingPhoto=await shrinkImage(f);showPhotoEdit()}
+  catch(err){alert('Não foi possível abrir essa imagem. Tente outra foto.')}
+}
+
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),1800)}
 
 /* ---------- cálculos ---------- */
@@ -776,11 +870,11 @@ function renderOrders(){
 }
 function productOptions(sel){return db.products.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${esc(p.name)} (${p.qty} em estoque)</option>`).join('')}
 function addItemRow(it){
-  const row=document.createElement('div');row.className='itemrow';
+  const row=document.createElement('div');row.className='itemrow two';
   const pid=it?.productId||(db.products.find(p=>p.qty>0)||db.products[0]).id;
   const p=db.products.find(x=>x.id===pid);
-  row.innerHTML=`<select class="iProd">${productOptions(pid)}${p?'':`<option value="${esc(pid)}" selected>${esc(it.name)} (removida)</option>`}</select><input class="iQty" type="number" inputmode="numeric" min="1" step="1" value="${it?.qty||1}"><input class="iPrice" type="text" inputmode="decimal" autocomplete="off" value="${fmtIn(it?.price??p?.price??'')}"><button class="danger" type="button" title="Remover">✕</button>`;
-  row.querySelector('.iProd').onchange=e=>{const np=db.products.find(x=>x.id===e.target.value);row.querySelector('.iPrice').value=fmtIn(np?.price??'');updateOrderTotals()};
+  row.innerHTML=`<div class="psel"><span class="iThumb">${thumb(pid,'sm')}</span><select class="iProd">${productOptions(pid)}${p?'':`<option value="${esc(pid)}" selected>${esc(it.name)} (removida)</option>`}</select></div><label class="mini">Qtd.<input class="iQty" type="number" inputmode="numeric" min="1" step="1" value="${it?.qty||1}"></label><label class="mini">Preço unitário (R$)<input class="iPrice" type="text" inputmode="decimal" autocomplete="off" value="${fmtIn(it?.price??p?.price??'')}"></label><button class="danger" type="button" title="Remover">✕</button>`;
+  row.querySelector('.iProd').onchange=e=>{const np=db.products.find(x=>x.id===e.target.value);row.querySelector('.iPrice').value=fmtIn(np?.price??'');row.querySelector('.iThumb').innerHTML=thumb(e.target.value,'sm');updateOrderTotals()};
   row.querySelector('.iQty').oninput=row.querySelector('.iPrice').oninput=updateOrderTotals;
   row.querySelector('button').onclick=()=>{row.remove();updateOrderTotals()};
   $('oItems').appendChild(row);
@@ -901,7 +995,7 @@ function viewOrder(id){
   <label>Status</label><select onchange="setStatus('${o.id}',this.value)">${STATUSES.map(s=>`<option value="${s.k}" ${s.k===o.status?'selected':''}>${s.l}</option>`).join('')}</select>
   ${nextStatus(o)?`<button style="width:100%;margin-top:10px" onclick="advanceOrder('${o.id}')">Avançar para “${ST[nextStatus(o)].l}” →</button>`:''}
   <h3 style="margin:16px 0 4px">Peças</h3>
-  ${o.items.map(i=>`<div class="line"><span>${i.qty}× ${esc(i.name)}</span><span>${money(i.qty*i.price)}</span></div>`).join('')}
+  ${o.items.map(i=>`<div class="line" style="align-items:center"><span class="pcell">${thumb(i.productId,'sm',true)}<span>${i.qty}× ${esc(i.name)}</span></span><span>${money(i.qty*i.price)}</span></div>`).join('')}
   ${o.discount?`<div class="line"><span>Desconto</span><span>- ${money(o.discount)}</span></div>`:''}
   <div class="line total"><b>Total</b><b>${money(orderTotal(o))}</b></div>
   <div class="line"><span class="muted">Custos (peças + venda)</span><span class="muted">${money(orderCogs(o)+orderExtra(o))}</span></div>
@@ -1183,7 +1277,7 @@ function renderProducts(){
     <button class="wide" onclick="openProduct()">+ Nova peça</button>
     ${best?`<div class="card"><div class="row between nowrap"><div><div class="muted">🏆 Maior margem</div><b>${esc(best.name)}</b></div><span class="pill ok">${fmtPct(productMargin(best)*100)}</span></div>
     ${worst&&worst!==best?`<div class="row between nowrap" style="margin-top:10px"><div><div class="muted">Menor margem</div><b>${esc(worst.name)}</b></div><span class="pill ${productMargin(worst)<0.2?'bad':'warn'}">${fmtPct(productMargin(worst)*100)}</span></div>`:''}</div>`:''}`;
-  $('productRows').innerHTML=list.length?list.map(p=>{const m=productMargin(p);return `<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.sku)}</span></td><td>${esc(p.category)}</td><td><span class="pill ${p.qty<=p.min?'low':''}">${p.qty}</span></td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${m==null?'—':`<span class="pill ${m<0.2?'bad':m<0.4?'warn':'ok'}">${fmtPct(m*100)}</span>`}</td><td><div class="actions"><button class="secondary" onclick="openProduct('${p.id}')">Editar</button><button class="danger" onclick="deleteProduct('${p.id}')">Excluir</button></div></td></tr>`}).join(''):'<tr><td colspan="7" class="empty">Cadastre sua primeira peça para começar.</td></tr>';
+  $('productRows').innerHTML=list.length?list.map(p=>{const m=productMargin(p);return `<tr><td><div class="pcell">${thumb(p.id,'',true)}<div><b>${esc(p.name)}</b><br><span class="muted">${esc(p.sku)}</span></div></div></td><td>${esc(p.category)}</td><td><span class="pill ${p.qty<=p.min?'low':''}">${p.qty}</span></td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${m==null?'—':`<span class="pill ${m<0.2?'bad':m<0.4?'warn':'ok'}">${fmtPct(m*100)}</span>`}</td><td><div class="actions"><button class="secondary" onclick="openProduct('${p.id}')">Editar</button><button class="danger" onclick="deleteProduct('${p.id}')">Excluir</button></div></td></tr>`}).join(''):'<tr><td colspan="7" class="empty">Cadastre sua primeira peça para começar.</td></tr>';
 }
 function openProduct(id){
   const p=id?db.products.find(x=>x.id===id):null,pr=db.pricing;
@@ -1191,7 +1285,7 @@ function openProduct(id){
   $('pName').value=p?.name||'';$('pSku').value=p?.sku||'';$('pCategory').value=p?.category||'Colar';$('pQty').value=p?.qty??1;$('pCost').value=fmtIn(p?.cost??'');$('pPrice').value=fmtIn(p?.price??'');$('pMin').value=p?.min??2;
   $('pPrep').value=p?.prepMin||'';$('pPack').value=fmtIn(p?p.pack||0:pr.pack||0);$('pExtra').value=fmtIn(p?.extra||0);$('pMargin').value=String(p?.margin??pr.margin).replace('.',',');
   $('pPricingInfo').textContent=`Imposto ${fmtPct(pr.tax)} · taxa do cartão ${fmtPct(pr.card)} · sua hora ${money(pr.hourly)} — ajuste em ⚙ Configurações.`;
-  $('pBuy').checked=!p;updatePriceCalc();openModal('productModal');
+  $('pBuy').checked=!p;pendingPhoto=undefined;showPhotoEdit();updatePriceCalc();openModal('productModal');
 }
 function saveProduct(){
   const name=$('pName').value.trim(),cost=round2($('pCost').value),price=round2($('pPrice').value),qty=Math.floor(Number($('pQty').value));
@@ -1202,11 +1296,13 @@ function saveProduct(){
   const added=qty-(old?.qty||0);
   if($('pBuy').checked&&added>0&&cost>0)db.expenses.unshift({id:uid(),desc:`Compra de estoque: ${name} (${added} un.)`,category:'Compra de estoque',value:round2(added*cost),date:today(),paid:true,paidAt:today()});
   if(old)db.products[db.products.indexOf(old)]=p;else db.products.push(p);
+  const ph=pendingPhoto;pendingPhoto=undefined;
   closeModal('productModal');persist();toast('Peça salva');
+  if(ph!==undefined)setPhoto(p.id,ph).then(()=>renderAll(),()=>alert('A peça foi salva, mas não foi possível guardar a foto neste aparelho.'));
 }
 function deleteProduct(id){
   if(db.orders.some(o=>o.items.some(i=>i.productId===id))){alert('Esta peça já aparece em pedidos. Para preservar o histórico, ela não pode ser excluída — deixe a quantidade em 0.');return}
-  if(confirm('Excluir esta peça do estoque?')){db.products=db.products.filter(p=>p.id!==id);persist()}
+  if(confirm('Excluir esta peça do estoque?')){db.products=db.products.filter(p=>p.id!==id);persist();if(photos[id])setPhoto(id,null).catch(()=>{})}
 }
 
 /* ---------- clientes ---------- */
@@ -1438,11 +1534,11 @@ function scrollBarsToNow(){
 function enterDemo(){
   if(!confirm('Entrar no modo teste?\n\nO app vai mostrar dados de exemplo. Seus dados reais ficam guardados à parte e não são alterados.\n\nPara voltar, toque em “Sair do teste” na faixa do topo.'))return;
   snapshotReal();demo=true;try{localStorage.setItem(DEMO_FLAG,'1')}catch(e){}
-  db=loadDb();persist();go('inicio');toast('Modo teste ativado');
+  db=loadDb();photos={};persist();go('inicio');toast('Modo teste ativado');loadPhotos().then(renderAll);
 }
 function exitDemo(){
   demo=false;try{localStorage.removeItem(DEMO_FLAG)}catch(e){}
-  db=loadDb();closeModal('smartModal');renderAll();go('inicio');toast('De volta aos seus dados reais');
+  db=loadDb();photos={};closeModal('smartModal');renderAll();go('inicio');toast('De volta aos seus dados reais');loadPhotos().then(renderAll);
 }
 function resetDemo(){
   if(!demo||!confirm('Recriar os dados de exemplo? O que você mudou no modo teste será descartado (seus dados reais não são afetados).'))return;
@@ -1462,14 +1558,21 @@ function renderSafety(){
   $('snapList').innerHTML=snaps.length?snaps.map(s=>{let n='';try{const d=JSON.parse(s.data);n=`${(d.orders||d.sales||[]).length} pedidos · ${(d.products||[]).length} peças`}catch(e){}return `<div class="optrow"><div><b>${fmtD(s.date)}</b><div class="muted">${n}</div></div><button class="secondary sm" onclick="restoreSnap('${s.date}')">Restaurar</button></div>`}).join(''):'<div class="muted">Nenhuma cópia ainda — a primeira é feita na próxima vez que o app abrir com dados.</div>';
 }
 
-function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(demo?'TESTE-':'')+'backup-ahava-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+// o backup leva as fotos junto (campo "fotos"), para que voltem ao restaurar
+function exportData(){const out=Object.keys(photos).length?{...db,fotos:photos}:db,blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(demo?'TESTE-':'')+'backup-ahava-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function importData(e){
   const f=e.target.files[0];if(!f)return;
   if(demo){alert('Você está no modo teste. Saia do modo teste para restaurar um backup dos seus dados reais.');e.target.value='';return}
   const r=new FileReader();
   r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x.products))throw 0;
     if(x.demo&&!confirm('Este arquivo é um backup do MODO TESTE (dados de exemplo). Tem certeza que quer colocá-lo no lugar dos seus dados reais?')){e.target.value='';return}
-    if(confirm('Restaurar este backup? Os dados atuais serão substituídos.')){db=migrate(x);persist();toast('Backup restaurado')}}catch(err){alert('Arquivo de backup inválido.')}e.target.value=''};
+    if(confirm('Restaurar este backup? Os dados atuais serão substituídos.')){
+      const fotos=x.fotos&&typeof x.fotos==='object'?x.fotos:null;delete x.fotos; // fotos vão para o IndexedDB, não para o localStorage
+      db=migrate(x);persist();toast('Backup restaurado');
+      // fotos do backup entram; fotos que já estão no aparelho continuam (nada é apagado)
+      if(fotos)Promise.all(Object.entries(fotos).filter(([,v])=>typeof v==='string'&&v.startsWith('data:image/')).map(([k,v])=>setPhoto(k,v)))
+        .then(()=>renderAll(),()=>alert('Os dados foram restaurados, mas algumas fotos não puderam ser guardadas neste aparelho.'));
+    }}catch(err){alert('Arquivo de backup inválido.')}e.target.value=''};
   r.readAsText(f);
 }
 
@@ -1502,7 +1605,7 @@ function setAccent(v){
 setAccent(document.documentElement.dataset.accent||'');
 
 /* ---------- atualização do app ---------- */
-const APP_VERSION='2026.11.04-3';
+const APP_VERSION='2026.11.05-1';
 $('appVersion').textContent=APP_VERSION;
 // Busca a versão nova no servidor, limpa o cache do app e recarrega (os dados ficam no localStorage, não são afetados)
 async function updateApp(){
@@ -1533,6 +1636,7 @@ if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadController)$('updBar').hidden=false});
 }
 renderAll();
+loadPhotos().then(()=>{if(Object.keys(photos).length)renderAll()});
 </script>
 </body>
 </html>

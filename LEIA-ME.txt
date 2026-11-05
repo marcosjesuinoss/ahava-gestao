@@ -28,6 +28,8 @@ O QUE O APP FAZ
 - Estoque: valor de venda, valor de custo, lucro potencial, peça com maior e
   menor margem, margem de cada peça e sugestão de preço de venda (custo,
   embalagem, tempo de preparo, outros custos, imposto, taxa do cartão e margem).
+- Foto de cada peça (câmera ou galeria): aparece no estoque, ao montar o
+  pedido e nos detalhes do pedido. Toque na miniatura para ver grande.
 - Pedidos: botão "Avançar" leva o pedido ao próximo status.
 - Gestão inteligente (Início e Gestão): alertas de cobrança, pedidos parados,
   reposição, meta, ritmo de vendas, caixa, margens, peças paradas e clientes
@@ -52,6 +54,8 @@ COMO ATUALIZAR
 
 DADOS E PRIVACIDADE
 - Os dados são gravados localmente no navegador/aparelho (localStorage).
+- As fotos das peças ficam à parte (IndexedDB, banco "ahava_fotos"), reduzidas
+  para uns 50 KB cada. O backup leva as fotos junto; ao restaurar, elas voltam.
 - Não há conta, sincronização na nuvem ou envio dos dados para servidor.
 - Use Configurações > Baixar backup com frequência.
 - Para trocar de aparelho, restaure o arquivo JSON de backup.
